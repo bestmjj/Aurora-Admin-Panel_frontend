@@ -1,12 +1,18 @@
-import classNames from "classnames";
+import type { Control, FieldErrors, FieldValues, UseFormRegister, UseFormSetValue } from "react-hook-form";
+import { cn } from "@/lib/utils";
 import FieldsRenderer from "./FieldsRenderer";
 import FieldShell from "./FieldShell";
 
-function buildGridContainerClasses(gridCfg) {
+interface GridConfig {
+  cols?: Record<string, number>;
+  gap?: number;
+}
+
+function buildGridContainerClasses(gridCfg?: GridConfig) {
   const cols = gridCfg?.cols || {};
   const gap = gridCfg?.gap ?? 2;
   const parts = ["grid", `gap-${gap}`];
-  const addCols = (bp, n) => {
+  const addCols = (bp: string, n?: number) => {
     if (!n) return;
     const pref = bp === "base" ? "" : `${bp}:`;
     parts.push(`${pref}grid-cols-${n}`);
@@ -20,16 +26,27 @@ function buildGridContainerClasses(gridCfg) {
   return parts.join(" ");
 }
 
-const ObjectField = ({ schema, parent, register, control, errors, setValue, name, label, className }) => {
+interface ObjectFieldProps {
+  schema: Record<string, unknown> & { $grid?: GridConfig };
+  parent?: string | null;
+  register: UseFormRegister<FieldValues>;
+  control: Control<FieldValues>;
+  errors: FieldErrors;
+  setValue: UseFormSetValue<FieldValues>;
+  name: string;
+  label?: string;
+  className?: string;
+}
+
+const ObjectField = ({ schema, parent, register, control, errors, setValue, name, label, className }: ObjectFieldProps) => {
   const fullName = parent ? `${parent}.${name}` : name;
   const level = parent ? parent.split(".").length + 1 : 1;
   return (
     <FieldShell
-      className={classNames("bg-base-200 px-2", className)}
+      className={cn("rounded-lg border border-border/50 bg-muted/30 p-3", className)}
       label={label}
-      key={fullName}
     >
-      <div className={classNames(buildGridContainerClasses(schema?.$grid), `pl-${level}`, `pr-${level}`)}>
+      <div className={cn(buildGridContainerClasses(schema?.$grid), `pl-${level}`, `pr-${level}`)}>
         <FieldsRenderer
           schema={schema}
           parent={fullName}
