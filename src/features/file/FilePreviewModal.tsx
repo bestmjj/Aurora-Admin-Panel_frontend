@@ -3,15 +3,30 @@ import { useTranslation } from "react-i18next";
 import DataLoading from "../DataLoading";
 import { downloadFile } from "../../utils/download";
 import ModalShell from "../ui/ModalShell";
+import { Button } from "@/components/ui/button";
 
-const FilePreviewModal = ({ modalProps = {}, close }) => {
+interface FileData {
+  name: string;
+  path: string;
+  type: string;
+  [key: string]: unknown;
+}
+
+interface FilePreviewModalProps {
+  modalProps?: {
+    file?: FileData;
+    [key: string]: unknown;
+  };
+  close: () => void;
+}
+
+const FilePreviewModal = ({ modalProps = {}, close }: FilePreviewModalProps) => {
   const { t } = useTranslation();
   const file = modalProps?.file;
 
   const [textContent, setTextContent] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-
+  const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
     const fetchText = async () => {
@@ -24,7 +39,7 @@ const FilePreviewModal = ({ modalProps = {}, close }) => {
         const txt = await res.text();
         setTextContent(txt);
       } catch (e) {
-        setError(e);
+        setError(e as Error);
       } finally {
         setLoading(false);
       }
@@ -42,7 +57,7 @@ const FilePreviewModal = ({ modalProps = {}, close }) => {
             <img
               src={file.path}
               alt={file.name}
-              className="max-h-[70vh] w-auto object-contain rounded-md"
+              className="max-h-[70vh] w-auto rounded-md object-contain"
             />
           </div>
         );
@@ -58,11 +73,11 @@ const FilePreviewModal = ({ modalProps = {}, close }) => {
         );
       case "TEXT":
         return (
-          <div className="max-h-[70vh] overflow-auto rounded-md border border-base-300 bg-base-200 p-3">
+          <div className="max-h-[70vh] overflow-auto rounded-md border border-border bg-muted p-3">
             {loading ? (
               <DataLoading />
             ) : error ? (
-              <div className="text-error text-sm">{String(error)}</div>
+              <div className="text-sm text-destructive">{String(error)}</div>
             ) : (
               <pre className="whitespace-pre-wrap break-words text-xs">
                 {textContent}
@@ -81,12 +96,18 @@ const FilePreviewModal = ({ modalProps = {}, close }) => {
       onClose={close}
       footer={
         <>
-          <button className="btn btn-outline btn-accent" onClick={close}>
+          <Button variant="outline" onClick={close}>
             {t("Close")}
-          </button>
-          <a className="btn btn-primary" href={file.path} download={file.name} onClick={(e) => { e.preventDefault(); downloadFile(file.path, file.name); }}>
+          </Button>
+          <Button
+            variant="default"
+            onClick={(e) => {
+              e.preventDefault();
+              downloadFile(file.path, file.name);
+            }}
+          >
             {t("Download")}
-          </a>
+          </Button>
         </>
       }
     >

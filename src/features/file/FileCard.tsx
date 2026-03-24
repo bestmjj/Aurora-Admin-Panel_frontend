@@ -1,12 +1,13 @@
+import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import classNames from "classnames";
+import { cn } from "@/lib/utils";
 import { useMutation } from "@apollo/client";
 import { motion } from "framer-motion";
+import { Button } from "@/components/ui/button";
 import { getReadableSize } from "../../utils/formatter";
 import { useModal } from "../../atoms/modal";
 import { downloadFile } from "../../utils/download";
 import { DELETE_FILE_MUTATION } from "../../queries/file";
-import { useEffect } from "react";
 import {
   Image,
   Video,
@@ -19,8 +20,16 @@ import {
   Download,
   Link as LinkIcon,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
-const fileTypeConfig = {
+interface FileTypeConfigEntry {
+  icon: LucideIcon;
+  accentBar: string;
+  iconBg: string;
+  label: string;
+}
+
+const fileTypeConfig: Record<string, FileTypeConfigEntry> = {
   IMAGE: {
     icon: Image,
     accentBar: "bg-secondary/70",
@@ -29,38 +38,56 @@ const fileTypeConfig = {
   },
   VIDEO: {
     icon: Video,
-    accentBar: "bg-accent/70",
-    iconBg: "bg-accent/10 text-accent",
+    accentBar: "bg-primary/70",
+    iconBg: "bg-primary/10 text-primary",
     label: "VIDEO",
   },
   TEXT: {
     icon: FileText,
-    accentBar: "bg-neutral/40",
-    iconBg: "bg-neutral/10 text-neutral",
+    accentBar: "bg-muted-foreground/40",
+    iconBg: "bg-muted text-muted-foreground",
     label: "TEXT",
   },
   EXECUTABLE: {
     icon: Terminal,
-    accentBar: "bg-info/70",
-    iconBg: "bg-info/10 text-info",
+    accentBar: "bg-blue-500/70",
+    iconBg: "bg-blue-500/10 text-blue-500",
     label: "EXECUTABLE",
   },
   SECRET: {
     icon: Key,
-    accentBar: "bg-error/60",
-    iconBg: "bg-error/10 text-error",
+    accentBar: "bg-destructive/60",
+    iconBg: "bg-destructive/10 text-destructive",
     label: "SECRET",
   },
 };
 
-const fallbackConfig = {
+const fallbackConfig: FileTypeConfigEntry = {
   icon: FileIcon,
-  accentBar: "bg-base-content/20",
-  iconBg: "bg-base-content/5 text-base-content/60",
+  accentBar: "bg-foreground/20",
+  iconBg: "bg-foreground/5 text-foreground/60",
   label: "FILE",
 };
 
-const FileCard = ({ file, onUpdate, index = 0 }) => {
+interface FileItem {
+  id: number;
+  name: string;
+  path: string;
+  type: string;
+  size: number;
+  version?: string | null;
+  notes?: string | null;
+  createdAt?: string | null;
+  updatedAt?: string | null;
+}
+
+interface FileCardProps {
+  file: FileItem;
+  onUpdate: () => void;
+  index?: number;
+}
+
+const FileCard = ({ file, onUpdate, index = 0 }: FileCardProps) => {
   const { t } = useTranslation();
   const [deleteFile, { called, error }] = useMutation(DELETE_FILE_MUTATION);
   const { open, confirm } = useModal();
@@ -114,22 +141,22 @@ const FileCard = ({ file, onUpdate, index = 0 }) => {
         delay: index * 0.04,
         ease: [0.25, 0.1, 0.25, 1],
       }}
-      className="group flex flex-col rounded-xl border border-base-content/6 bg-base-100 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-xl hover:shadow-base-content/4"
+      className="group flex flex-col rounded-xl border border-border bg-card transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-xl hover:shadow-foreground/4"
     >
       {/* Type accent bar */}
       <div
-        className={classNames(
+        className={cn(
           "h-[3px] w-full rounded-t-xl transition-colors duration-500",
-          config.accentBar
+          config.accentBar,
         )}
       />
 
       {/* Icon + identity */}
-      <div className="flex items-start gap-3 px-4 pt-3.5 pb-1">
+      <div className="flex items-start gap-3 px-4 pb-1 pt-3.5">
         <div
-          className={classNames(
+          className={cn(
             "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg",
-            config.iconBg
+            config.iconBg,
           )}
         >
           <IconComponent size={18} />
@@ -143,12 +170,12 @@ const FileCard = ({ file, onUpdate, index = 0 }) => {
           </h3>
           <p className="mt-0.5 flex items-center gap-1.5 text-xs opacity-40">
             <span>{t(file.type)}</span>
-            <span className="opacity-40">·</span>
+            <span className="opacity-40">&middot;</span>
             <span>{getReadableSize(file.size)}</span>
           </p>
         </div>
         {file.version && (
-          <span className="shrink-0 rounded-md bg-base-200 px-1.5 py-0.5 text-[10px] font-medium tracking-wide opacity-50">
+          <span className="shrink-0 rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-medium tracking-wide opacity-50">
             {file.version}
           </span>
         )}
@@ -157,7 +184,7 @@ const FileCard = ({ file, onUpdate, index = 0 }) => {
       {/* Notes */}
       {file.notes ? (
         <p
-          className="truncate px-4 pt-1 pb-2 text-xs opacity-35"
+          className="truncate px-4 pb-2 pt-1 text-xs opacity-35"
           title={file.notes}
         >
           {file.notes}
@@ -167,30 +194,42 @@ const FileCard = ({ file, onUpdate, index = 0 }) => {
       )}
 
       {/* Actions */}
-      <div className="mt-auto flex items-center gap-1.5 border-t border-base-content/[0.04] px-3 py-2">
-        <button
-          className="btn btn-ghost btn-sm flex-1 gap-1.5 text-xs opacity-60 transition-opacity hover:opacity-100"
+      <div className="mt-auto flex items-center gap-1.5 border-t border-border/40 px-3 py-2">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="flex-1 gap-1.5 text-xs opacity-60 transition-opacity hover:opacity-100"
           onClick={handleClickCancel}
         >
           <Trash2 size={13} />
           {t("Delete")}
-        </button>
+        </Button>
         {file.type === "EXECUTABLE" && (
-          <button
-            className="btn btn-ghost btn-sm flex-1 gap-1.5 text-xs opacity-60 transition-opacity hover:opacity-100"
-            onClick={() => open("binding", { fileId: file.id, fileName: file.name, fileVersion: file.version })}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="flex-1 gap-1.5 text-xs opacity-60 transition-opacity hover:opacity-100"
+            onClick={() =>
+              open("binding", {
+                fileId: file.id,
+                fileName: file.name,
+                fileVersion: file.version,
+              })
+            }
           >
             <LinkIcon size={13} />
             {t("Bindings")}
-          </button>
+          </Button>
         )}
-        <button
-          className="btn btn-primary btn-sm flex-1 gap-1.5 text-xs"
+        <Button
+          variant="default"
+          size="sm"
+          className="flex-1 gap-1.5 text-xs"
           onClick={handleCheck}
         >
           {isPreviewable ? <Eye size={13} /> : <Download size={13} />}
           {isPreviewable ? t("Preview") : t("Download")}
-        </button>
+        </Button>
       </div>
     </motion.div>
   );

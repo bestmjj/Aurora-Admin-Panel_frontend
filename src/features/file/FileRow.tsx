@@ -1,12 +1,15 @@
+import { useEffect, type MouseEvent } from "react";
 import { useTranslation } from "react-i18next";
-import classNames from "classnames";
+import { cn } from "@/lib/utils";
 import { useMutation } from "@apollo/client";
 import { motion } from "framer-motion";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { TableCell, TableRow as ShadcnTableRow } from "@/components/ui/table";
 import { getReadableSize } from "../../utils/formatter";
 import { useModal } from "../../atoms/modal";
 import { downloadFile } from "../../utils/download";
 import { DELETE_FILE_MUTATION } from "../../queries/file";
-import { useEffect } from "react";
 import {
   Image,
   Video,
@@ -19,8 +22,15 @@ import {
   Download,
   Link as LinkIcon,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
-const fileTypeConfig = {
+interface FileTypeConfigEntry {
+  icon: LucideIcon;
+  iconBg: string;
+  label: string;
+}
+
+const fileTypeConfig: Record<string, FileTypeConfigEntry> = {
   IMAGE: {
     icon: Image,
     iconBg: "bg-secondary/10 text-secondary",
@@ -28,33 +38,51 @@ const fileTypeConfig = {
   },
   VIDEO: {
     icon: Video,
-    iconBg: "bg-accent/10 text-accent",
+    iconBg: "bg-primary/10 text-primary",
     label: "VIDEO",
   },
   TEXT: {
     icon: FileText,
-    iconBg: "bg-neutral/10 text-neutral",
+    iconBg: "bg-muted text-muted-foreground",
     label: "TEXT",
   },
   EXECUTABLE: {
     icon: Terminal,
-    iconBg: "bg-info/10 text-info",
+    iconBg: "bg-blue-500/10 text-blue-500",
     label: "EXECUTABLE",
   },
   SECRET: {
     icon: Key,
-    iconBg: "bg-error/10 text-error",
+    iconBg: "bg-destructive/10 text-destructive",
     label: "SECRET",
   },
 };
 
-const fallbackConfig = {
+const fallbackConfig: FileTypeConfigEntry = {
   icon: FileIcon,
-  iconBg: "bg-base-content/5 text-base-content/60",
+  iconBg: "bg-foreground/5 text-foreground/60",
   label: "FILE",
 };
 
-const FileRow = ({ file, onUpdate, index = 0 }) => {
+interface FileItem {
+  id: number;
+  name: string;
+  path: string;
+  type: string;
+  size: number;
+  version?: string | null;
+  notes?: string | null;
+  createdAt?: string | null;
+  updatedAt?: string | null;
+}
+
+interface FileRowProps {
+  file: FileItem;
+  onUpdate: () => void;
+  index?: number;
+}
+
+const FileRow = ({ file, onUpdate, index = 0 }: FileRowProps) => {
   const { t } = useTranslation();
   const [deleteFile, { called, error }] = useMutation(DELETE_FILE_MUTATION);
   const { open, confirm } = useModal();
@@ -66,7 +94,7 @@ const FileRow = ({ file, onUpdate, index = 0 }) => {
     open("filePreview", { file });
   };
 
-  const handleClickCancel = async (e) => {
+  const handleClickCancel = async (e: MouseEvent) => {
     e.stopPropagation();
     const confirmed = await confirm({
       title: t("Delete File"),
@@ -109,13 +137,13 @@ const FileRow = ({ file, onUpdate, index = 0 }) => {
         delay: index * 0.03,
         ease: [0.25, 0.1, 0.25, 1],
       }}
-      className="cursor-pointer hover"
+      className="cursor-pointer hover:bg-muted/50"
       onClick={handleCheck}
     >
       {/* Type icon */}
       <td className="w-0 pr-0">
         <div
-          className={classNames(
+          className={cn(
             "flex h-8 w-8 items-center justify-center rounded-lg",
             config.iconBg,
           )}
@@ -136,16 +164,12 @@ const FileRow = ({ file, onUpdate, index = 0 }) => {
 
       {/* Type */}
       <td>
-        <span
-          className={classNames(
-            "badge badge-sm",
-            file.type === "SECRET"
-              ? "badge-error badge-outline"
-              : "badge-ghost",
-          )}
+        <Badge
+          variant={file.type === "SECRET" ? "destructive" : "ghost"}
+          className="text-xs"
         >
           {t(file.type)}
-        </span>
+        </Badge>
       </td>
 
       {/* Size */}
@@ -168,18 +192,22 @@ const FileRow = ({ file, onUpdate, index = 0 }) => {
       {/* Actions */}
       <td className="text-right">
         <div className="flex items-center justify-end gap-0.5">
-          <button
+          <Button
             type="button"
-            className="btn btn-ghost btn-xs opacity-60 hover:opacity-100"
+            variant="ghost"
+            size="xs"
+            className="opacity-60 hover:opacity-100"
             onClick={handleClickCancel}
             title={t("Delete")}
           >
             <Trash2 size={14} />
-          </button>
+          </Button>
           {file.type === "EXECUTABLE" && (
-            <button
+            <Button
               type="button"
-              className="btn btn-ghost btn-xs opacity-60 hover:opacity-100"
+              variant="ghost"
+              size="xs"
+              className="opacity-60 hover:opacity-100"
               onClick={(e) => {
                 e.stopPropagation();
                 open("binding", { fileId: file.id });
@@ -187,11 +215,12 @@ const FileRow = ({ file, onUpdate, index = 0 }) => {
             >
               <LinkIcon size={14} />
               {t("Bindings")}
-            </button>
+            </Button>
           )}
-          <button
+          <Button
             type="button"
-            className="btn btn-ghost btn-xs"
+            variant="ghost"
+            size="xs"
             onClick={(e) => {
               e.stopPropagation();
               handleCheck();
@@ -199,7 +228,7 @@ const FileRow = ({ file, onUpdate, index = 0 }) => {
           >
             {isPreviewable ? <Eye size={14} /> : <Download size={14} />}
             {isPreviewable ? t("Preview") : t("Download")}
-          </button>
+          </Button>
         </div>
       </td>
     </motion.tr>
