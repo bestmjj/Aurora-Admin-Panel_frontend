@@ -1,4 +1,5 @@
 import { gql } from "@apollo/client";
+import type { ContractDraft } from "./param-editor-types";
 
 export const LIST_SERVICE_DEFINITIONS = gql`
   query ListServiceDefinitions($limit: Int, $offset: Int) {
@@ -51,7 +52,7 @@ export const COMPILE_SERVICE_PREVIEW_BY_ID = gql`
   }
 `;
 
-export const DEFAULT_SERVICE_TEMPLATE = {
+export const DEFAULT_SERVICE_TEMPLATE: ContractDraft = {
   schemaVersion: "aurora-exec/v1",
   contractKey: "demo_service",
   version: 1,

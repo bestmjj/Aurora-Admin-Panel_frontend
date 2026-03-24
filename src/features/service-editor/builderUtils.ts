@@ -1,12 +1,14 @@
-export function prettyJson(value) {
+import type { EmitDraft, EmitPresetKind, ParamDraft } from "./param-editor-types";
+
+export function prettyJson(value: unknown): string {
   return JSON.stringify(value, null, 2);
 }
 
-export function cloneJson(value) {
+export function cloneJson<T>(value: T): T {
   return JSON.parse(JSON.stringify(value));
 }
 
-export function createDefaultParam(index = 0) {
+export function createDefaultParam(index = 0): ParamDraft {
   return {
     key: `param_${index + 1}`,
     type: "string",
@@ -19,7 +21,7 @@ export function createDefaultParam(index = 0) {
   };
 }
 
-export function getEmitPresetKind(param) {
+export function getEmitPresetKind(param: ParamDraft | null | undefined): EmitPresetKind {
   const emit = param?.emit || {};
   if (emit.pos !== undefined && emit.pos !== null) return "pos";
   if (emit.arg !== undefined && emit.arg !== null) return "arg";
@@ -31,18 +33,22 @@ export function getEmitPresetKind(param) {
   return "arg";
 }
 
-export function splitArgPrefix(arg) {
+export function splitArgPrefix(arg: unknown): { prefix: string; name: string } {
   if (typeof arg !== "string" || !arg) return { prefix: "--", name: "" };
   if (arg.startsWith("--")) return { prefix: "--", name: arg.slice(2) };
   if (arg.startsWith("-")) return { prefix: "-", name: arg.slice(1) };
   return { prefix: "--", name: arg };
 }
 
-export function joinArgPrefix(prefix, name) {
+export function joinArgPrefix(prefix: string, name: string): string {
   return `${prefix}${name}`;
 }
 
-export function normalizeEmitForPreset(prevEmit = {}, preset, key = "param") {
+export function normalizeEmitForPreset(
+  prevEmit: Partial<EmitDraft> = {},
+  preset: EmitPresetKind,
+  key: string = "param",
+): Partial<EmitDraft> {
   switch (preset) {
     case "pos":
       return { pos: prevEmit.pos ?? 0 };
@@ -91,7 +97,10 @@ export function normalizeEmitForPreset(prevEmit = {}, preset, key = "param") {
   }
 }
 
-export function parseDefaultInputByType(type, rawValue) {
+export function parseDefaultInputByType(
+  type: string,
+  rawValue: unknown,
+): unknown {
   if (rawValue === "" || rawValue === null || rawValue === undefined) return undefined;
   if (type === "int") {
     const n = Number(rawValue);
@@ -106,8 +115,8 @@ export function parseDefaultInputByType(type, rawValue) {
   }
   if (type === "list" || type === "object") {
     try {
-      return JSON.parse(rawValue);
-    } catch (_) {
+      return JSON.parse(rawValue as string);
+    } catch {
       return rawValue;
     }
   }
