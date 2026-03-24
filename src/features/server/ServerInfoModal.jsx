@@ -2,20 +2,18 @@ import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { gql, useQuery, useMutation, useApolloClient } from "@apollo/client";
 import classNames from "classnames";
-import { useDispatch, } from "react-redux";
 import { AtSign } from "lucide-react";
 import { GET_SERVER_QUERY, ADD_SERVER_MUTATION, UPDATE_SERVER_MUTATION, DELETE_SERVER_MUTATION } from "../../queries/server";
 import { GET_SECRETS_QUERY, UPLOAD_FILE_MUTATION } from "../../queries/file";
 import { useModal } from "../../atoms/modal";
 import { FileTypeEnum } from "../../store/apis/types.generated";
 import DataLoading from "../DataLoading";
-import { showNotification } from "../../store/reducers/notification";
+import { notify } from "../../atoms/notification";
 import ModalShell from "../ui/ModalShell";
 
 
 const ServerInfoModal = ({ modalProps = {}, close, resolve }) => {
   const { t } = useTranslation();
-  const dispatch = useDispatch();
   const { confirm } = useModal();
   const { serverId } = modalProps;
   const {
@@ -40,12 +38,10 @@ const ServerInfoModal = ({ modalProps = {}, close, resolve }) => {
     { loading: updateServerLoading, error: updateServerError },
   ] = useMutation(UPDATE_SERVER_MUTATION, {
     onCompleted: () => {
-      dispatch(
-        showNotification({
-          type: "success",
-          body: "Server saved successfully",
-        })
-      );
+      notify({
+        type: "success",
+        body: "Server saved successfully",
+      });
       if (resolve) resolve({ action: "saved" });
       close();
     },
@@ -53,12 +49,10 @@ const ServerInfoModal = ({ modalProps = {}, close, resolve }) => {
   const [addServer, { loading: addServerLoading, error: addServerError }] =
     useMutation(ADD_SERVER_MUTATION, {
     onCompleted: () => {
-      dispatch(
-        showNotification({
-          type: "success",
-          body: "Server added successfully",
-        })
-      );
+      notify({
+        type: "success",
+        body: "Server added successfully",
+      });
       if (resolve) resolve({ action: "added" });
       close();
     },
@@ -67,12 +61,10 @@ const ServerInfoModal = ({ modalProps = {}, close, resolve }) => {
   const [deleteServer, { loading: deleteServerLoading, error: deleteServerError }] =
     useMutation(DELETE_SERVER_MUTATION, {
     onCompleted: () => {
-      dispatch(
-        showNotification({
-          type: "success",
-          body: "Server deleted successfully",
-        })
-      );
+      notify({
+        type: "success",
+        body: "Server deleted successfully",
+      });
       if (resolve) resolve({ action: "deleted" });
       close();
     },
