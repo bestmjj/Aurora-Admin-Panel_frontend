@@ -10,8 +10,7 @@
     "dev": "vite --host",
     "build": "vite build",
     "preview": "vite preview",
-    "generate-api": "npx @rtk-query/codegen-openapi openapi-config.cjs",
-    "generate-themes": "node scripts/generate-themes.mjs"
+    "generate-api": "npx @rtk-query/codegen-openapi openapi-config.cjs"
   },
   "dependencies": {
     "@apollo/client": "^3.8.3",

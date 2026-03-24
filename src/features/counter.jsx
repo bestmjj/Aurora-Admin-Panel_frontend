@@ -1,5 +1,5 @@
-import React, { useState, useContext, useEffect } from "react";
-import { ThemeContext } from "../contexts/ThemeContext";
+import React, { useState } from "react";
+import { useTheme } from "../components/theme-provider";
 
 const choose = (choices) => {
     var index = Math.floor(Math.random() * choices.length);
@@ -8,7 +8,7 @@ const choose = (choices) => {
 
 const Counter = () => {
     const [count, setCount] = useState(0)
-    const { theme, setTheme } = useContext(ThemeContext)
+    const { theme, setTheme } = useTheme()
 
     return (
         <div className="flex h-screen">

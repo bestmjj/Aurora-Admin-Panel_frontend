@@ -1,9 +1,14 @@
-import { memo, useContext } from "react";
-import { ThemeContext } from "../../contexts/ThemeContext";
-import themes from "../../utils/themes";
+import { memo } from "react";
+import { useTheme } from "../../components/theme-provider";
+import { THEMES } from "../../atoms/theme";
+
+const allOptions = [
+  { name: "auto", label: "Auto" },
+  ...THEMES.map((t) => ({ name: t.name, label: t.label })),
+];
 
 const ThemeMenuItems = ({ onSelect }) => {
-  const { setTheme } = useContext(ThemeContext);
+  const { setTheme } = useTheme();
 
   const selectTheme = (themeName) => {
     setTheme(themeName);
@@ -12,16 +17,16 @@ const ThemeMenuItems = ({ onSelect }) => {
 
   return (
     <>
-      {themes.map((themeName) => {
+      {allOptions.map(({ name, label }) => {
         return (
-          <li key={themeName}>
+          <li key={name}>
             <button
               type="button"
               className="w-full truncate text-left"
-              onClick={() => selectTheme(themeName)}
-              title={themeName}
+              onClick={() => selectTheme(name)}
+              title={label}
             >
-              {themeName}
+              {label}
             </button>
           </li>
         );

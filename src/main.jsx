@@ -9,7 +9,7 @@ import "./index.css";
 import App from "./App";
 import i18n from "./i18n";
 import { HelmetProvider } from "react-helmet-async";
-import { ThemeProvider } from "./contexts/ThemeContext";
+import { ThemeProvider } from "./components/theme-provider";
 import { store, persistor } from "./store";
 import ThemedSuspense from "./features/ThemedSuspense";
 import { ApolloProvider } from "@apollo/client";
