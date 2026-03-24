@@ -1,26 +1,27 @@
-import { Navigate } from 'react-router-dom'
-import { useTranslation } from 'react-i18next'
-import { useAtom } from 'jotai'
-import { motion } from 'framer-motion'
-import { authAtom } from "../../atoms/auth"
-import EmailPasswordForm from './EmailPasswordForm'
-import ThemeSwitch from '../theme/ThemeSwitch'
-import LanguageSwitch from '../i18n/LanguageSwitch'
+import type { FC } from "react";
+import { Navigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import { useAtom } from "jotai";
+import { motion } from "framer-motion";
+import { authAtom } from "../../atoms/auth";
+import EmailPasswordForm from "./EmailPasswordForm";
+import ThemeSwitch from "../theme/ThemeSwitch";
+import LanguageSwitch from "../i18n/LanguageSwitch";
 
-const Login = () => {
-  const { t } = useTranslation()
-  const [{ token }] = useAtom(authAtom)
+const Login: FC = () => {
+  const { t } = useTranslation();
+  const [{ token }] = useAtom(authAtom);
 
   if (token.length > 0) {
-    return <Navigate to="/app/servers" />
+    return <Navigate to="/app/servers" />;
   }
 
   return (
     <div className="flex min-h-screen flex-col lg:flex-row">
-      {/* Atmosphere — aurora image with brand text anchored bottom-left */}
+      {/* Atmosphere -- aurora image with brand text anchored bottom-left */}
       <div
         className="relative flex min-h-[30vh] items-end bg-cover bg-center lg:min-h-screen lg:w-[58%]"
-        style={{ backgroundImage: 'url(/img/aurora.jpg)' }}
+        style={{ backgroundImage: "url(/img/aurora.jpg)" }}
       >
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
         <motion.div
@@ -39,7 +40,7 @@ const Login = () => {
       </div>
 
       {/* Form surface */}
-      <div className="relative flex flex-1 flex-col bg-base-100 lg:w-[42%]">
+      <div className="relative flex flex-1 flex-col bg-background lg:w-[42%]">
         <div className="flex items-center justify-end gap-1 px-6 pt-4">
           <ThemeSwitch />
           <LanguageSwitch />
@@ -55,7 +56,7 @@ const Login = () => {
         </motion.div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default Login
+export default Login;

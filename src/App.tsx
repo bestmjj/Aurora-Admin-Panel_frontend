@@ -14,7 +14,7 @@ const ModalManager = lazy(() => import("./features/modal/ModalManager"));
 const Notification = lazy(() => import("./features/Notification"));
 const Layout = lazy(() => import("./Layout"));
 const Login = lazy(() => import("./features/auth/Login"));
-const CreateAccount = lazy(() => import("./features/auth/CreateAccoount"));
+const CreateAccount = lazy(() => import("./features/auth/CreateAccount"));
 const ServerContainer = lazy(() => import("./features/server/ServerContainer"));
 const ServerPorts = lazy(() => import("./features/port/ServerPorts"));
 const ServerUsers = lazy(() => import("./features/user/ServerUsers"));

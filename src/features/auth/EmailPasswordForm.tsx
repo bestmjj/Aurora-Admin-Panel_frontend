@@ -1,18 +1,25 @@
-import React, { useState } from "react";
+import { type FC, type FormEvent, useState } from "react";
 import { Link } from "react-router-dom";
-import classNames from "classnames";
 import { useTranslation } from "react-i18next";
+import { cn } from "@/lib/utils";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import { useNotificationsReducer } from "../../atoms/notification";
 
-import { resetGraphQLLink } from "../../graphql"
+import { resetGraphQLLink } from "../../graphql";
 import { logIn, register } from "../../apis/auth";
 import { useAuthReducer } from "../../atoms/auth";
 import { validateEmail } from "../../utils/validators";
 
-const EmailPasswordForm = ({ create = false }) => {
+interface EmailPasswordFormProps {
+  create?: boolean;
+}
+
+const EmailPasswordForm: FC<EmailPasswordFormProps> = ({ create = false }) => {
   const { t } = useTranslation();
-  const { login } = useAuthReducer()
-  const { addNotification } = useNotificationsReducer()
+  const { login } = useAuthReducer();
+  const { addNotification } = useNotificationsReducer();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [password2, setPassword2] = useState("");
@@ -21,10 +28,17 @@ const EmailPasswordForm = ({ create = false }) => {
   const validPassword = () => (email === "" && password === "") || password.length >= 8;
   const validPassword2 = () =>
     !create || (password === "" && password2 === "") || password2 === password;
-  const inputStyle = (para, validPara) =>
-    para.length > 0 ? (validPara() ? "input-success" : "input-error") : "";
 
-  const submitForm = async (e) => {
+  const getInputClassName = (value: string, isValid: () => boolean | RegExpMatchArray | null) =>
+    value.length > 0
+      ? isValid()
+        ? "border-green-500/50 focus-visible:border-green-500"
+        : "border-destructive focus-visible:border-destructive"
+      : "";
+
+  const isDisabled = !validEmail() || !validPassword() || !validPassword2();
+
+  const submitForm = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!(email.length > 0) || !(password.length > 0)) {
       throw new Error("Email or password was not provided");
@@ -36,14 +50,14 @@ const EmailPasswordForm = ({ create = false }) => {
       } else {
         response = await logIn({ username: email, password: password });
       }
-      login(response.data)
-      resetGraphQLLink()
-    } catch (error) {
+      login(response.data);
+      resetGraphQLLink();
+    } catch (error: unknown) {
       addNotification({
         title: t("Error"),
-        body: error.message,
+        body: error instanceof Error ? error.message : String(error),
         type: "error",
-      })
+      });
     }
   };
 
@@ -53,74 +67,60 @@ const EmailPasswordForm = ({ create = false }) => {
         {create ? t("Create Account") : t("Login")}
       </h2>
 
-      <div>
-        <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider opacity-40">
+      <div className="space-y-1.5">
+        <Label className="text-[11px] font-medium uppercase tracking-wider opacity-40">
           {t("Email")}
-        </label>
-        <input
+        </Label>
+        <Input
           type="email"
           placeholder={t("Email Placeholder")}
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className={classNames(
-            "input input-bordered w-full",
-            inputStyle(email, validEmail)
-          )}
+          className={cn(getInputClassName(email, validEmail))}
         />
       </div>
 
-      <div>
-        <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider opacity-40">
+      <div className="space-y-1.5">
+        <Label className="text-[11px] font-medium uppercase tracking-wider opacity-40">
           {t("Password")}
-        </label>
-        <input
+        </Label>
+        <Input
           type="password"
           placeholder={t("Password Placeholder")}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className={classNames(
-            "input input-bordered w-full",
-            inputStyle(password, validPassword)
-          )}
+          className={cn(getInputClassName(password, validPassword))}
         />
       </div>
 
       {create && (
-        <div>
-          <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider opacity-40">
+        <div className="space-y-1.5">
+          <Label className="text-[11px] font-medium uppercase tracking-wider opacity-40">
             {t("Confirm Password")}
-          </label>
-          <input
+          </Label>
+          <Input
             type="password"
             placeholder={t("Confirm Password Placeholder")}
             value={password2}
             onChange={(e) => setPassword2(e.target.value)}
-            className={classNames(
-              "input input-bordered w-full",
-              inputStyle(password2, validPassword2)
-            )}
+            className={cn(getInputClassName(password2, validPassword2))}
           />
         </div>
       )}
 
       <div className="pt-2">
-        <button
-          className={classNames("btn btn-primary w-full", {
-            "btn-disabled": !validEmail() || !validPassword() || !validPassword2(),
-          })}
-          type="submit"
-        >
+        <Button type="submit" className="w-full" disabled={isDisabled}>
           {create ? t("Create Account") : t("Login")}
-        </button>
+        </Button>
       </div>
 
       <p className="text-center text-xs opacity-40">
         {create ? (
-          <Link to="/login" className="link link-hover hover:opacity-70">
+          <Link to="/login" className="underline underline-offset-4 transition-opacity hover:opacity-70">
             {t("Login")}
           </Link>
         ) : (
-          <Link to="/create-account" className="link link-hover hover:opacity-70">
+          <Link to="/create-account" className="underline underline-offset-4 transition-opacity hover:opacity-70">
             {t("Create Account")}
           </Link>
         )}
