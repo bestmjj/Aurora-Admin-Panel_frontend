@@ -1,7 +1,17 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useApolloClient } from "@apollo/client";
-import classNames from "classnames";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import DataLoading from "../DataLoading";
 import DeploymentStatusBadge from "./DeploymentStatusBadge";
 import {
@@ -14,8 +24,43 @@ import {
 } from "../../queries/deployment";
 import { useModal } from "../../atoms/modal";
 import ModalShell from "../ui/ModalShell";
+import { ChevronDown } from "lucide-react";
 
-const DeploymentDetailModal = ({ modalProps, close, resolve }) => {
+interface Port {
+  num: number;
+  externalNum?: number | null;
+}
+
+interface DeploymentLog {
+  id: number;
+  action: string;
+  status: string;
+  output?: string | null;
+  createdAt?: string | null;
+  taskId?: string | null;
+}
+
+interface Deployment {
+  id: number;
+  serverId: number;
+  serviceBindingId?: number | null;
+  status: string;
+  port?: Port | null;
+  updatedAt?: string | null;
+  valuesJson?: Record<string, unknown> | null;
+  logs?: DeploymentLog[];
+}
+
+interface DeploymentDetailModalProps {
+  modalProps: {
+    deploymentId: number;
+    [key: string]: unknown;
+  };
+  close: () => void;
+  resolve?: (value: unknown) => void;
+}
+
+const DeploymentDetailModal = ({ modalProps, close, resolve }: DeploymentDetailModalProps) => {
   const { t } = useTranslation();
   const { confirm } = useModal();
   const client = useApolloClient();
@@ -32,12 +77,15 @@ const DeploymentDetailModal = ({ modalProps, close, resolve }) => {
   const [removeMutation, { loading: removing }] = useMutation(REMOVE_DEPLOYMENT);
 
   // Streaming output
-  const [streamingTaskId, setStreamingTaskId] = useState(null);
-  const [streamOutput, setStreamOutput] = useState([]);
-  const outputRef = useRef(null);
+  const [streamingTaskId, setStreamingTaskId] = useState<string | null>(null);
+  const [streamOutput, setStreamOutput] = useState<string[]>([]);
+  const outputRef = useRef<HTMLDivElement>(null);
 
-  const deployment = data?.serverDeployment;
-  const logs = deployment?.logs ?? [];
+  // Collapsible values panel
+  const [valuesOpen, setValuesOpen] = useState(false);
+
+  const deployment: Deployment | undefined = data?.serverDeployment;
+  const logs: DeploymentLog[] = deployment?.logs ?? [];
 
   // Auto-scroll output
   useEffect(() => {
@@ -57,15 +105,15 @@ const DeploymentDetailModal = ({ modalProps, close, resolve }) => {
         variables: { taskId: streamingTaskId },
       })
       .subscribe({
-        next: ({ data }) => {
+        next: ({ data }: { data?: { taskStream?: unknown } }) => {
           if (data?.taskStream) {
             const msg = data.taskStream;
-            if (typeof msg === "object" && msg.data) {
-              setStreamOutput((prev) => [...prev, msg.data]);
+            if (typeof msg === "object" && msg !== null && "data" in msg) {
+              setStreamOutput((prev) => [...prev, (msg as { data: string }).data]);
             } else if (typeof msg === "string") {
               setStreamOutput((prev) => [...prev, msg]);
-            } else if (typeof msg === "object" && msg.text) {
-              setStreamOutput((prev) => [...prev, msg.text]);
+            } else if (typeof msg === "object" && msg !== null && "text" in msg) {
+              setStreamOutput((prev) => [...prev, (msg as { text: string }).text]);
             }
           }
         },
@@ -136,7 +184,7 @@ const DeploymentDetailModal = ({ modalProps, close, resolve }) => {
     refetch();
   };
 
-  const handleViewLog = useCallback((log) => {
+  const handleViewLog = useCallback((log: DeploymentLog) => {
     if (log.taskId) {
       setStreamingTaskId(log.taskId);
     }
@@ -153,11 +201,10 @@ const DeploymentDetailModal = ({ modalProps, close, resolve }) => {
     <ModalShell
       title={`${t("Deployment")} #${deploymentId}`}
       onClose={handleClose}
-      maxWidth="max-w-3xl"
       footer={
-        <button className="btn btn-outline" onClick={handleClose}>
+        <Button variant="outline" onClick={handleClose}>
           {t("Close")}
-        </button>
+        </Button>
       }
     >
       {loading ? (
@@ -165,29 +212,29 @@ const DeploymentDetailModal = ({ modalProps, close, resolve }) => {
           <DataLoading />
         </div>
       ) : !deployment ? (
-        <div className="py-8 text-center text-sm opacity-70">
+        <div className="py-8 text-center text-sm text-muted-foreground">
           {t("Deployment not found")}
         </div>
       ) : (
-        <>
+        <div className="space-y-4">
           {/* Status overview */}
           <div className="flex flex-wrap items-center gap-3">
             <DeploymentStatusBadge status={deployment.status} />
-            <span className="text-xs opacity-60">
+            <span className="text-xs text-muted-foreground">
               {t("Server")}: #{deployment.serverId}
             </span>
-            <span className="text-xs opacity-60">
+            <span className="text-xs text-muted-foreground">
               {t("Binding")}: #{deployment.serviceBindingId}
             </span>
             {deployment.port && (
-              <span className="badge badge-outline badge-sm">
+              <Badge variant="outline" className="text-xs">
                 {t("Port")} {deployment.port.num}
                 {deployment.port.externalNum && deployment.port.externalNum !== deployment.port.num
                   ? ` (ext: ${deployment.port.externalNum})`
                   : ""}
-              </span>
+              </Badge>
             )}
-            <span className="text-xs opacity-60">
+            <span className="text-xs text-muted-foreground">
               {t("Updated")}:{" "}
               {deployment.updatedAt
                 ? new Date(deployment.updatedAt).toLocaleString()
@@ -197,55 +244,72 @@ const DeploymentDetailModal = ({ modalProps, close, resolve }) => {
 
           {/* Action buttons */}
           <div className="flex flex-wrap gap-2">
-            <button
-              className={classNames("btn btn-primary btn-sm", { loading: redeploying })}
+            <Button
+              variant="default"
+              size="sm"
               onClick={handleRedeploy}
               disabled={isActionLoading}
             >
-              {t("Redeploy")}
-            </button>
+              {redeploying ? t("Redeploying...") : t("Redeploy")}
+            </Button>
             {deployment.status === "deployed" && (
-              <button
-                className={classNames("btn btn-warning btn-sm", { loading: stopping })}
+              <Button
+                variant="outline"
+                size="sm"
+                className="border-yellow-500/40 text-yellow-600 hover:bg-yellow-500/10 dark:text-yellow-400"
                 onClick={handleStop}
                 disabled={isActionLoading}
               >
-                {t("Stop")}
-              </button>
+                {stopping ? t("Stopping...") : t("Stop")}
+              </Button>
             )}
             {deployment.status === "stopped" && (
-              <button
-                className={classNames("btn btn-success btn-sm", { loading: starting })}
+              <Button
+                variant="outline"
+                size="sm"
+                className="border-green-500/40 text-green-600 hover:bg-green-500/10 dark:text-green-400"
                 onClick={handleStart}
                 disabled={isActionLoading}
               >
-                {t("Start")}
-              </button>
+                {starting ? t("Starting...") : t("Start")}
+              </Button>
             )}
-            <button
-              className={classNames("btn btn-error btn-outline btn-sm", {
-                loading: removing,
-              })}
+            <Button
+              variant="destructive"
+              size="sm"
               onClick={handleRemove}
               disabled={isActionLoading}
             >
-              {t("Remove")}
-            </button>
+              {removing ? t("Removing...") : t("Remove")}
+            </Button>
           </div>
 
-          {/* Current values */}
+          {/* Current values — collapsible */}
           {deployment.valuesJson &&
             Object.keys(deployment.valuesJson).length > 0 && (
-              <details className="collapse collapse-arrow bg-base-300">
-                <summary className="collapse-title text-sm font-medium">
+              <div className="rounded-xl border border-border bg-muted/30">
+                <button
+                  type="button"
+                  className="flex w-full items-center justify-between px-4 py-3 text-sm font-medium"
+                  onClick={() => setValuesOpen((v) => !v)}
+                >
                   {t("Current Values")}
-                </summary>
-                <div className="collapse-content">
-                  <pre className="max-h-40 overflow-auto rounded bg-base-100 p-2 text-xs">
-                    {JSON.stringify(deployment.valuesJson, null, 2)}
-                  </pre>
-                </div>
-              </details>
+                  <ChevronDown
+                    size={16}
+                    className={cn(
+                      "text-muted-foreground transition-transform",
+                      valuesOpen && "rotate-180",
+                    )}
+                  />
+                </button>
+                {valuesOpen && (
+                  <div className="border-t border-border px-4 pb-3 pt-2">
+                    <pre className="max-h-40 overflow-auto rounded-lg bg-card p-2 text-xs">
+                      {JSON.stringify(deployment.valuesJson, null, 2)}
+                    </pre>
+                  </div>
+                )}
+              </div>
             )}
 
           {/* Streaming output */}
@@ -254,13 +318,13 @@ const DeploymentDetailModal = ({ modalProps, close, resolve }) => {
               <h4 className="mb-1 text-sm font-semibold">{t("Live Output")}</h4>
               <div
                 ref={outputRef}
-                className="max-h-48 overflow-auto rounded-lg bg-neutral p-3 font-mono text-xs text-neutral-content"
+                className="max-h-48 overflow-auto rounded-xl bg-foreground/5 p-3 font-mono text-xs text-foreground dark:bg-foreground/10"
               >
                 {streamOutput.map((line, i) => (
                   <div key={i}>{line}</div>
                 ))}
                 {streamingTaskId && (
-                  <div className="animate-pulse opacity-60">&#9608;</div>
+                  <div className="animate-pulse text-muted-foreground">&#9608;</div>
                 )}
               </div>
             </div>
@@ -270,57 +334,58 @@ const DeploymentDetailModal = ({ modalProps, close, resolve }) => {
           <div>
             <h4 className="mb-1 text-sm font-semibold">{t("Log History")}</h4>
             {logs.length === 0 ? (
-              <div className="text-xs opacity-60">{t("No logs yet")}</div>
+              <div className="text-xs text-muted-foreground">{t("No logs yet")}</div>
             ) : (
               <div className="max-h-48 overflow-auto">
-                <table className="table table-xs">
-                  <thead>
-                    <tr>
-                      <th>{t("Action")}</th>
-                      <th>{t("Status")}</th>
-                      <th>{t("Output")}</th>
-                      <th>{t("Time")}</th>
-                      <th></th>
-                    </tr>
-                  </thead>
-                  <tbody>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>{t("Action")}</TableHead>
+                      <TableHead>{t("Status")}</TableHead>
+                      <TableHead>{t("Output")}</TableHead>
+                      <TableHead>{t("Time")}</TableHead>
+                      <TableHead />
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
                     {logs.map((log) => (
-                      <tr key={log.id} className="hover">
-                        <td>
-                          <span className="badge badge-outline badge-xs">
+                      <TableRow key={log.id}>
+                        <TableCell>
+                          <Badge variant="outline" className="text-xs">
                             {log.action}
-                          </span>
-                        </td>
-                        <td>
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
                           <DeploymentStatusBadge status={log.status} />
-                        </td>
-                        <td className="max-w-xs truncate text-xs">
+                        </TableCell>
+                        <TableCell className="max-w-xs truncate text-xs">
                           {log.output || "-"}
-                        </td>
-                        <td className="text-xs">
+                        </TableCell>
+                        <TableCell className="text-xs">
                           {log.createdAt
                             ? new Date(log.createdAt).toLocaleString()
                             : "-"}
-                        </td>
-                        <td>
+                        </TableCell>
+                        <TableCell>
                           {log.taskId && (
-                            <button
-                              className="btn btn-ghost btn-xs"
+                            <Button
+                              variant="ghost"
+                              size="xs"
                               onClick={() => handleViewLog(log)}
                               type="button"
                             >
                               {t("View")}
-                            </button>
+                            </Button>
                           )}
-                        </td>
-                      </tr>
+                        </TableCell>
+                      </TableRow>
                     ))}
-                  </tbody>
-                </table>
+                  </TableBody>
+                </Table>
               </div>
             )}
           </div>
-        </>
+        </div>
       )}
     </ModalShell>
   );
