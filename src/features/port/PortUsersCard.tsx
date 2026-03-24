@@ -1,8 +1,10 @@
 import { useState, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Plus, X, Minus } from "lucide-react";
-import classNames from "classnames";
+import { cn } from "@/lib/utils";
 import { gql, useQuery, useMutation } from "@apollo/client";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import DataLoading from "../DataLoading";
 
 const GET_USERS_BY_EMAIL_QUERY = gql`
@@ -21,11 +23,21 @@ const ADD_PORT_USER_MUTATION = gql`
   }
 `;
 
-const UserSearchSelect = ({ open, onSelect }) => {
+interface UserResult {
+  id: number;
+  email: string;
+}
+
+interface UserSearchSelectProps {
+  open: boolean;
+  onSelect: (user: UserResult) => void;
+}
+
+const UserSearchSelect = ({ open, onSelect }: UserSearchSelectProps) => {
   const { t } = useTranslation();
   const [email, setEmail] = useState("");
-  const inputRef = useRef();
-  const { data: usersData, isLoading: usersLoading } = useQuery(
+  const inputRef = useRef<HTMLInputElement>(null);
+  const { data: usersData, loading: usersLoading } = useQuery(
     GET_USERS_BY_EMAIL_QUERY,
     {
       variables: {
@@ -33,20 +45,20 @@ const UserSearchSelect = ({ open, onSelect }) => {
         limit: 5,
       },
       fetchPolicy: "network-only",
-    }
+    },
   );
   useEffect(() => {
     if (open) {
-      inputRef.current.focus();
+      inputRef.current?.focus();
       setEmail("");
     }
   }, [open]);
 
   return (
     <>
-      <input
+      <Input
         type="text"
-        className="input input-ghost input-sm mt-2 w-full"
+        className="mt-2 w-full"
         placeholder={t("Please enter an email address")}
         value={email}
         onChange={(e) => setEmail(e.target.value)}
@@ -55,20 +67,21 @@ const UserSearchSelect = ({ open, onSelect }) => {
       {usersLoading ? (
         <DataLoading />
       ) : (
-        <div className="h-30 mt-2 flex flex-col overflow-y-auto">
-          {usersData?.paginatedUsers.items.map((user) => (
+        <div className="mt-2 flex h-30 flex-col overflow-y-auto">
+          {usersData?.paginatedUsers.items.map((user: UserResult) => (
             <div
               className="flex w-full flex-row items-center justify-start"
               key={user.id}
             >
               <span className="text-sm">{user.email}</span>
               <div className="flex flex-grow flex-row items-center justify-end">
-                <button
-                  className="btn btn-ghost btn-xs"
+                <Button
+                  variant="ghost"
+                  size="icon-xs"
                   onClick={() => onSelect(user)}
                 >
                   <Plus size={16} />
-                </button>
+                </Button>
               </div>
             </div>
           ))}
@@ -78,47 +91,63 @@ const UserSearchSelect = ({ open, onSelect }) => {
   );
 };
 
-const PortUsersCard = ({ port, setSelected }) => {
+interface Port {
+  id: number;
+  num: number;
+  externalNum?: number | null;
+  allowedUsers: { user: { id: number; email: string } }[];
+  users?: { id: number; email: string }[];
+  [key: string]: unknown;
+}
+
+interface PortUsersCardProps {
+  port: Port;
+  setSelected: (payload: { type: string; id: number; port: Port } | null) => void;
+}
+
+const PortUsersCard = ({ port, setSelected }: PortUsersCardProps) => {
   const { t } = useTranslation();
   const [add, setAdd] = useState(port.allowedUsers.length === 0);
-  const [addPortUser, { data, loading, error }] = useMutation(ADD_PORT_USER_MUTATION);
-  // const { data: usersData, isLoading: usersLoading } = useGetUsersByEmailQuery();
-  const handleUserSelect = (user) => {
+  const [addPortUser] = useMutation(ADD_PORT_USER_MUTATION);
+
+  const handleUserSelect = (user: UserResult) => {
     addPortUser({
       variables: {
         portId: port.id,
         userId: user.id,
       },
-    })
+    });
   };
 
   return (
-    <div className="relative flex w-full flex-col items-center justify-start space-y-2 px-4 py-4 h-72">
+    <div className="relative flex h-72 w-full flex-col items-center justify-start space-y-2 px-4 py-4">
       <div className="absolute right-2 top-2" onClick={() => setSelected(null)}>
-        <div className="btn btn-circle btn-ghost btn-outline btn-xs">
+        <Button variant="ghost" size="icon-xs" className="rounded-full">
           <X size={20} />
-        </div>
+        </Button>
       </div>
       <div className="flex w-full flex-row items-center justify-start space-x-2">
-        <span className="card-title">
+        <span className="text-base font-semibold">
           {port.externalNum ? port.externalNum : port.num} {t("Users List")}
         </span>
-        <div
-          className="btn btn-circle btn-success btn-xs"
+        <Button
+          variant="default"
+          size="icon-xs"
+          className="rounded-full"
           onClick={() => setAdd((prev) => !prev)}
         >
-          <Plus size={16} className="text-success-content" />
-        </div>
+          <Plus size={16} />
+        </Button>
       </div>
-      
+
       <div
-        className={classNames(
-          "collapse flex w-full flex-col items-center justify-center",
-          { "collapse-open": add }, {"h-0": !add}
+        className={cn(
+          "flex w-full flex-col items-center justify-center overflow-hidden transition-all",
+          add ? "max-h-40" : "max-h-0",
         )}
       >
-        <div className="collapse-content flex w-full flex-col">
-          <UserSearchSelect open={add} onSelect={handleUserSelect}/>
+        <div className="flex w-full flex-col">
+          <UserSearchSelect open={add} onSelect={handleUserSelect} />
         </div>
       </div>
       <div className="flex max-h-32 w-full flex-col items-center justify-center overflow-y-auto">
@@ -130,12 +159,14 @@ const PortUsersCard = ({ port, setSelected }) => {
             >
               <span className="text-sm">{user.email}</span>
               <div className="flex flex-grow flex-row items-center justify-end">
-                <button
-                  className="btn btn-circle btn-error btn-ghost btn-xs"
+                <Button
+                  variant="destructive"
+                  size="icon-xs"
+                  className="rounded-full"
                   onClick={() => console.log("remove")}
                 >
                   <Minus size={16} />
-                </button>
+                </Button>
               </div>
             </div>
           ))}

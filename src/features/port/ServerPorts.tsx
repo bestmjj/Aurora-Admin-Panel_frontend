@@ -1,9 +1,8 @@
 import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import classNames from "classnames";
+import { cn } from "@/lib/utils";
 import { gql, useQuery } from "@apollo/client";
-import Error from "../layout/Error";
 import { motion, AnimatePresence } from "framer-motion";
 import useQueryParams from "../../hooks/useQueryParams";
 import useWindowSize from "../../hooks/useWindowSize";
@@ -59,31 +58,45 @@ const GET_SERVER_PORTS_QUERY = gql`
   }
 `;
 
-const SelectCard = ({ selected, setSelected }) => {
-  const { innerWidth } = useWindowSize();
+interface SelectedState {
+  type: string;
+  id: number;
+  port: Record<string, unknown>;
+  position?: string;
+}
+
+interface SelectCardProps {
+  selected: SelectedState;
+  setSelected: (payload: SelectedState | null) => void;
+}
+
+const SelectCard = ({ selected, setSelected }: SelectCardProps) => {
   const getCard = () => {
     switch (selected.type) {
       case "user":
-        return <PortUsersCard port={selected.port} setSelected={setSelected} />;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        return <PortUsersCard port={selected.port as any} setSelected={setSelected as any} />;
       case "select":
         return (
-          <PortSelectCard port={selected.port} setSelected={setSelected} />
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          <PortSelectCard port={selected.port as any} setSelected={setSelected as any} />
         );
       default:
-        return <PortUsersCard port={selected.port} setSelected={setSelected} />;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        return <PortUsersCard port={selected.port as any} setSelected={setSelected as any} />;
     }
   };
   return (
     <motion.div
-      className={classNames(
-        "fixed z-40 mx-auto w-72 max-w-screen-sm rounded-lg bg-base-200 shadow-xl",
+      className={cn(
+        "fixed z-40 mx-auto w-72 max-w-screen-sm rounded-lg bg-card shadow-xl",
         {
           "left-0 right-0 top-1/4":
-            !!!selected.position || selected.position === "middle",
+            !selected.position || selected.position === "middle",
           "bottom-0": selected.position === "bottom",
-        }
+        },
       )}
-      layoutId={selected.id}
+      layoutId={String(selected.id)}
     >
       {getCard()}
     </motion.div>
@@ -110,13 +123,12 @@ const ServerPorts = () => {
   ]);
   const { data, loading, refetch } = useQuery(GET_SERVER_PORTS_QUERY, {
     variables: {
-
       serverId: Number(serverId),
       limit,
       offset,
-    }
+    },
   });
-  const [selected, setSelected] = useState(null);
+  const [selected, setSelected] = useState<SelectedState | null>(null);
 
   return (
     <>
@@ -137,13 +149,13 @@ const ServerPorts = () => {
                 setSelected(
                   payload
                     ? {
-                      ...payload,
-                      id: selected.id,
-                      port: data?.paginatedPorts?.items.find(
-                        (port) => port.id === selected.id
-                      ),
-                    }
-                    : null
+                        ...payload,
+                        id: selected.id,
+                        port: data?.paginatedPorts?.items.find(
+                          (port: { id: number }) => port.id === selected.id,
+                        ),
+                      }
+                    : null,
                 )
               }
             />
@@ -153,14 +165,14 @@ const ServerPorts = () => {
           <DataLoading />
         ) : (
           <>
-            <div className="grid w-full grid-cols-1 gap-2 gap-y-6 px-2 pb-4 pt-2 place-content-evenly place-items-center xs:grid-cols-2 sm:grid-cols-3 md:grid-cols-4  lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8">
-              {(data?.paginatedPorts?.items ?? []).map((port) => (
-                <motion.div key={port.id} layoutId={port.id}>
+            <div className="grid w-full grid-cols-1 place-content-evenly place-items-center gap-2 gap-y-6 px-2 pb-4 pt-2 xs:grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8">
+              {(data?.paginatedPorts?.items ?? []).map((port: { id: number; [key: string]: unknown }) => (
+                <motion.div key={port.id} layoutId={String(port.id)}>
                   <PortCard
                     key={port.id}
-                    port={port}
+                    port={port as any}
                     onUpdate={refetch}
-                    setSelected={setSelected}
+                    setSelected={setSelected as any}
                   />
                 </motion.div>
               ))}

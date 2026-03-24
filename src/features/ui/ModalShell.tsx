@@ -2,7 +2,7 @@ import { DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { cn } from "@/lib/utils";
 
 interface ModalShellProps {
-  title?: string;
+  title?: React.ReactNode;
   onClose?: () => void;
   footer?: React.ReactNode;
   children: React.ReactNode;
