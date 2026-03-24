@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import ReactLoading from "react-loading";
+
 import { gql } from "@apollo/client";
 import classNames from "classnames";
 import useSubscribe from "@/hooks/useSubscribe";
@@ -41,11 +41,7 @@ const ServerSSHStat = ({ server, sshConnected, setSSHConnected, registerSSHRefet
               className="stat-value tooltip cursor-not-allowed"
               data-tip={t("Connecting")}
             >
-              <ReactLoading
-                type="spinningBubbles"
-                className="fill-primary"
-                style={{ height: 24, width: 24 }}
-              />
+              <div className="size-6 animate-spin rounded-full border-3 border-muted border-t-primary" />
             </button>
           ) : error || (data && data.connectServer.error) ? (
             <>
