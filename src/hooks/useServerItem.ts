@@ -1,12 +1,36 @@
 import { useState, useCallback, useEffect } from "react";
 import { useModal } from "../atoms/modal";
 
-const useServerItem = (server, refetch, metric) => {
-  const { open } = useModal();
-  const [sshRefetch, setSSHRefetch] = useState(null);
-  const [sshConnected, setSSHConnected] = useState(false);
+interface Server {
+  id: number;
+  name: string;
+  address: string;
+  lastSeen?: string | null;
+  [key: string]: unknown;
+}
 
-  const registerSSHRefetch = useCallback((func) => {
+interface ServerMetric {
+  isOnline?: boolean;
+  [key: string]: unknown;
+}
+
+interface UseServerItemResult {
+  sshConnected: boolean | null;
+  setSSHConnected: React.Dispatch<React.SetStateAction<boolean | null>>;
+  registerSSHRefetch: (func: (() => void) | null) => void;
+  handleEdit: () => Promise<void>;
+}
+
+const useServerItem = (
+  server: Server,
+  refetch: () => void,
+  metric?: ServerMetric | null,
+): UseServerItemResult => {
+  const { open } = useModal();
+  const [sshRefetch, setSSHRefetch] = useState<(() => void) | null>(null);
+  const [sshConnected, setSSHConnected] = useState<boolean | null>(false);
+
+  const registerSSHRefetch = useCallback((func: (() => void) | null) => {
     setSSHRefetch(func);
   }, []);
 

@@ -12,9 +12,37 @@ query ServerMetricsQuery($serverId: Int!, $start: DateTime!) {
   }
 }
 `;
+
 const QUERY_START_INTERVAL = 1000 * 60 * 10;
 
-const useServerMetrics = (serverId, metric) => {
+interface MetricPoint {
+  t: number;
+  v: number;
+}
+
+interface ServerMetricSnapshot {
+  serverId?: number;
+  time?: string;
+  cpuUtilPct?: number | null;
+  memUsedPct?: number | null;
+  netRxBps?: number | null;
+  netTxBps?: number | null;
+  isOnline?: boolean;
+}
+
+interface UseServerMetricsResult {
+  cpuSeries: number[];
+  memSeries: number[];
+  rxSeries: number[];
+  txSeries: number[];
+  loading: boolean;
+  error: unknown;
+}
+
+const useServerMetrics = (
+  serverId: number,
+  metric?: ServerMetricSnapshot | null,
+): UseServerMetricsResult => {
   const startAt = useMemo(() => new Date(Date.now() - QUERY_START_INTERVAL), [serverId]);
   const { data, loading, error, refetch } = useQuery(SERVER_METRICS_QUERY, {
     variables: {
@@ -37,20 +65,20 @@ const useServerMetrics = (serverId, metric) => {
     return () => clearInterval(id);
   }, [serverId, refetch]);
 
-  const [cpuPts, setCpuPts] = useState([]); // {t:number, v:number}[]
-  const [memPts, setMemPts] = useState([]);
-  const [rxPts, setRxPts] = useState([]);
-  const [txPts, setTxPts] = useState([]);
-  const [lastTs, setLastTs] = useState(null); // ms epoch
+  const [cpuPts, setCpuPts] = useState<MetricPoint[]>([]);
+  const [memPts, setMemPts] = useState<MetricPoint[]>([]);
+  const [rxPts, setRxPts] = useState<MetricPoint[]>([]);
+  const [txPts, setTxPts] = useState<MetricPoint[]>([]);
+  const [lastTs, setLastTs] = useState<number | null>(null);
 
   // Seed from query data
   useEffect(() => {
     const pts = Array.isArray(data?.serverMetricSeries) ? data.serverMetricSeries : [];
     if (!pts.length) return;
-    const mapSeries = (key) =>
+    const mapSeries = (key: string) =>
       pts
-        .filter((p) => typeof p?.[key] === "number" && p.time)
-        .map((p) => ({ t: new Date(p.time).getTime(), v: p[key] }));
+        .filter((p: Record<string, unknown>) => typeof p?.[key] === "number" && p.time)
+        .map((p: Record<string, unknown>) => ({ t: new Date(p.time as string).getTime(), v: p[key] as number }));
     const cpu = mapSeries("cpuUtilPct");
     const mem = mapSeries("memUsedPct");
     const rx = mapSeries("netRxBps");
@@ -74,7 +102,7 @@ const useServerMetrics = (serverId, metric) => {
     const t = new Date(metric.time).getTime();
     if (lastTs && t <= lastTs) return;
     const cutoff = Date.now() - QUERY_START_INTERVAL;
-    const pushIfNum = (setter, val) => {
+    const pushIfNum = (setter: React.Dispatch<React.SetStateAction<MetricPoint[]>>, val: number | null | undefined) => {
       if (typeof val === "number") {
         setter((arr) => [...arr.filter((p) => p.t >= cutoff), { t, v: val }]);
       } else {

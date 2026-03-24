@@ -1,10 +1,18 @@
-import { useCallback, useMemo, useState, useRef, useEffect } from "react";
+import { useCallback, useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import ServerCard from "./ServerCard";
 import ServerRow from "./ServerRow";
 import { List, LayoutGrid } from "lucide-react";
 import { gql, useQuery, useApolloClient } from "@apollo/client";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 import { GET_SERVERS_QUERY } from "../../queries/server";
 import Error from "../layout/Error";
@@ -34,6 +42,17 @@ subscription ServerMetric {
 }
 `;
 
+interface MetricData {
+  serverId: number;
+  cpuUtilPct?: number;
+  memUsedPct?: number;
+  netRxBps?: number;
+  netTxBps?: number;
+  isOnline?: boolean;
+  time?: string;
+  [key: string]: unknown;
+}
+
 const ServerList = () => {
   const { t } = useTranslation();
   const { open } = useModal();
@@ -53,11 +72,11 @@ const ServerList = () => {
     },
   ]);
   const client = useApolloClient();
-  const [metricsMap, setMetricsMap] = useState({});
+  const [metricsMap, setMetricsMap] = useState<Record<number, MetricData>>({});
   useEffect(() => {
     const observable = client.subscribe({ query: SERVER_METRIC_SUBSCRIPTION });
     const sub = observable.subscribe({
-      next({ data }) {
+      next({ data }: { data?: { serverMetric?: MetricData } }) {
         if (data?.serverMetric) {
           const m = data.serverMetric;
           setMetricsMap((prev) => {
@@ -75,7 +94,7 @@ const ServerList = () => {
   );
   const [listStyle, setListStyle] = useState("List view");
 
-  const setLimit = useCallback((value) => {
+  const setLimit = useCallback((value: number) => {
     setAtomLimit(value);
     setQueryLimit(value);
   }, [setAtomLimit, setQueryLimit]);
@@ -90,23 +109,24 @@ const ServerList = () => {
           if (result) refetch();
         }}
       >
-        <div className="tooltip tooltip-bottom" data-tip={t(listStyle)}>
-          <label className="swap swap-flip text-9xl">
-            <input
-              type="checkbox"
-              value={listStyle === "Cards view"}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={() => setListStyle(listStyle === "Cards view" ? "List view" : "Cards view")}
-            />
-            <div className="swap-on"><List size={20} /></div>
-            <div className="swap-off"><LayoutGrid size={20} /></div>
-          </label>
-        </div>
+            >
+              {listStyle === "Cards view" ? <List size={20} /> : <LayoutGrid size={20} />}
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="bottom">{t(listStyle)}</TooltipContent>
+        </Tooltip>
       </PageHeader>
 
       {listStyle === "Cards view" ? (
         <>
           <div className="grid grid-cols-1 gap-5 px-4 pb-6 pt-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-            {(data?.paginatedServers?.items ?? []).map((server, i) => (
+            {(data?.paginatedServers?.items ?? []).map((server: { id: number; [key: string]: unknown }, i: number) => (
               <motion.div
                 key={server.id}
                 initial={{ opacity: 0, y: 20 }}
@@ -117,7 +137,7 @@ const ServerList = () => {
                   ease: [0.22, 1, 0.36, 1],
                 }}
               >
-                <ServerCard server={server} refetch={refetch} metric={metricsMap[server.id]} />
+                <ServerCard server={server as any} refetch={refetch} metric={metricsMap[server.id]} />
               </motion.div>
             ))}
           </div>
@@ -128,39 +148,41 @@ const ServerList = () => {
             offset={offset}
             setLimit={setLimit}
             setOffset={setOffset}
-          ></Paginator>
+          />
         </>
       ) : (
         <>
           <div className="overflow-x-auto">
-            <table className="table border-separate border-spacing-y-3 table-fixed max-w-screen-lg px-1 mx-auto">
+            <table className="w-full border-separate border-spacing-y-3 table-fixed max-w-screen-lg px-1 mx-auto text-sm">
               <thead className="text-center">
                 <tr>
-                  <th className="w-32 sticky left-0 z-10 bg-base-100">
+                  <th className="w-32 sticky left-0 z-10 bg-background font-medium text-muted-foreground">
                     {t("Name")}
                   </th>
-                  <th className="w-16">{t("SSH")}</th>
-                  <th className="w-16">{t("Ports")}</th>
-                  <th className="w-16">{t("Traffic")}</th>
-                  <th className="w-28">{t("Address")}</th>
-                  <th className="w-12">{t("CPU")}</th>
-                  <th className="w-12">{t("Mem")}</th>
-                  <th className="w-12">{t("Disk")}</th>
-                  <th className="w-16 sticky right-0 z-10 bg-base-100">{t("Actions")}</th>
+                  <th className="w-16 font-medium text-muted-foreground">{t("SSH")}</th>
+                  <th className="w-16 font-medium text-muted-foreground">{t("Ports")}</th>
+                  <th className="w-16 font-medium text-muted-foreground">{t("Traffic")}</th>
+                  <th className="w-28 font-medium text-muted-foreground">{t("Address")}</th>
+                  <th className="w-12 font-medium text-muted-foreground">{t("CPU")}</th>
+                  <th className="w-12 font-medium text-muted-foreground">{t("Mem")}</th>
+                  <th className="w-16 font-medium text-muted-foreground">{t("Disk")}</th>
+                  <th className="w-16 sticky right-0 z-10 bg-background font-medium text-muted-foreground">{t("Actions")}</th>
                 </tr>
               </thead>
               <tbody className="text-center">
                 {loading ? (
-                  Array.from(Array(limit)).map((_, i) => (
+                  Array.from(Array(limit as number)).map((_, i) => (
                     <tr key={i} className="w-full">
-                      <td className="h-20 w-full skeleton" colSpan={9}></td>
+                      <td colSpan={9}>
+                        <Skeleton className="h-20 w-full rounded-xl" />
+                      </td>
                     </tr>
                   ))
                 ) : (
-                  (data?.paginatedServers?.items ?? []).map((server, i) => (
+                  (data?.paginatedServers?.items ?? []).map((server: { id: number; [key: string]: unknown }, i: number) => (
                     <ServerRow
                       key={server.id}
-                      server={server}
+                      server={server as any}
                       refetch={refetch}
                       metric={metricsMap[server.id]}
                       index={i}
@@ -170,7 +192,7 @@ const ServerList = () => {
               </tbody>
             </table>
           </div>
-          <div className="flex w-full flex-row justify-end mx-auto max-w-screen-lg mx-auto">
+          <div className="flex w-full flex-row justify-end mx-auto max-w-screen-lg">
             <Paginator
               isLoading={loading}
               count={data?.paginatedServers?.count}
@@ -178,8 +200,7 @@ const ServerList = () => {
               offset={offset}
               setLimit={setLimit}
               setOffset={setOffset}
-            ></Paginator>
-
+            />
           </div>
         </>
       )}

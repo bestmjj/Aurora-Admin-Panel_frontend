@@ -1,4 +1,4 @@
-import React, { useId, useMemo, useRef } from "react";
+import { useId, useMemo, useRef } from "react";
 import { createPortal } from "react-dom";
 import {
   AreaChart,
@@ -10,24 +10,43 @@ import {
   YAxis,
 } from "recharts";
 
+interface DataPoint {
+  x: number;
+  a: number;
+  b?: number;
+}
+
 // Build data points for one or two series.
-// For single: [n,n] -> [{x, a}]
-// For dual: [n],[m] -> [{x, a, b}]
-const toSeries = (arrA = [], arrB = null) => {
+const toSeries = (arrA: number[] = [], arrB: number[] | null = null): DataPoint[] => {
   if (Array.isArray(arrB) && arrB.length) {
     const len = Math.min(arrA.length, arrB.length);
-    const out = new Array(len);
+    const out = new Array<DataPoint>(len);
     for (let i = 0; i < len; i++) out[i] = { x: i, a: arrA[i], b: arrB[i] };
     return out;
   }
   return arrA.map((v, i) => ({ x: i, a: v }));
 };
 
-const defaultFormat = (n) => `${Math.round(n)}`;
+const defaultFormat = (n: number) => `${Math.round(n)}`;
+
+interface SparklineProps {
+  data?: number[];
+  data2?: number[] | null;
+  area?: boolean;
+  strokeWidth?: number;
+  className?: string;
+  showLatest?: boolean;
+  formatValue?: (n: number) => string;
+  labelA?: string;
+  labelB?: string;
+  colorA?: string;
+  colorB?: string;
+  unit?: string | null;
+}
 
 const Sparkline = ({
   data = [],
-  data2 = null, // optional second series
+  data2 = null,
   area = true,
   strokeWidth = 2,
   className = "",
@@ -35,19 +54,20 @@ const Sparkline = ({
   formatValue = defaultFormat,
   labelA = "Up",
   labelB = "Down",
-  colorA = "currentColor", // respects parent text color
-  colorB = "hsl(var(--su))", // DaisyUI success by default for clarity
-  unit = null, // "%" to normalize area to 0–100
-}) => {
+  colorA = "currentColor",
+  colorB = "hsl(var(--su))",
+  unit = null,
+}: SparklineProps) => {
   const uid = useId().replace(/:/g, "");
-  const containerRef = useRef(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const series = useMemo(() => toSeries(data, data2), [data, data2]);
   const latestA = data?.length ? data[data.length - 1] : null;
   const latestB = data2?.length ? data2[data2.length - 1] : null;
 
   const hasB = Array.isArray(data2) && data2.length > 0;
 
-  const SparkPortalTooltip = (props) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const SparkPortalTooltip = (props: any) => {
     const { active, payload, coordinate } = props || {};
     if (!active || !payload || payload.length === 0) return null;
     const rect = containerRef.current?.getBoundingClientRect();
@@ -56,7 +76,8 @@ const Sparkline = ({
     const gap = 10;
     const pageX = rect.left + (coordinate.x ?? 0) + window.scrollX + gap;
     const pageY = rect.top + (coordinate.y ?? 0) + window.scrollY - gap;
-    const items = payload.filter((p) => p && p.value != null);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const items = payload.filter((p: any) => p && p.value != null);
 
     const node = (
       <div
@@ -68,8 +89,9 @@ const Sparkline = ({
           pointerEvents: "none",
         }}
       >
-        <div className="rounded-box bg-base-100 text-base-content shadow-lg ring-1 ring-base-300 px-2 py-1 text-xs">
-          {items.map((it, idx) => (
+        <div className="rounded-xl bg-card text-card-foreground shadow-lg ring-1 ring-border px-2 py-1 text-xs">
+          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+          {items.map((it: any, idx: number) => (
             <div key={idx} className="flex items-center gap-2 leading-none py-0.5">
               <span
                 className="inline-block w-2 h-2 rounded-full"
@@ -94,7 +116,7 @@ const Sparkline = ({
       {showLatest && (
         <div className={`absolute left-0 top-0 ${hasB ? "flex flex-col gap-1" : "flex flex-row gap-2"} items-start ${hasB ? "text-[9.5px]" : "text-xs"} leading-none opacity-90`}>
           {latestA !== null && (
-            <span className="inline-flex items-center gap-1 rounded-md bg-base-200/60 py-0.5">
+            <span className="inline-flex items-center gap-1 rounded-md bg-muted/60 py-0.5">
               {
                 !hasB && (
                   <span className="inline-block w-1.5 h-1.5 rounded-full" style={{ background: colorA }} />
@@ -104,7 +126,7 @@ const Sparkline = ({
             </span>
           )}
           {hasB && latestB !== null && (
-            <span className="inline-flex items-center gap-1 rounded-md bg-base-200/60 py-0.5">
+            <span className="inline-flex items-center gap-1 rounded-md bg-muted/60 py-0.5">
               <span className="tabular-nums">{formatValue(latestB)}</span>
             </span>
           )}
