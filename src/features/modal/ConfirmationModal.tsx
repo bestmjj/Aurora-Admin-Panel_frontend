@@ -1,16 +1,33 @@
 import { useTranslation } from "react-i18next";
-import ModalShell from "../ui/ModalShell";
+import { Button } from "@/components/ui/button";
+import { ModalShell } from "../ui/ModalShell";
 
-const ConfirmationModal = ({ modalProps = {}, close, resolve }) => {
+interface ConfirmationModalProps {
+  modalProps?: {
+    title?: string;
+    message?: string;
+    confirmText?: string;
+    cancelText?: string;
+  };
+  close: () => void;
+  resolve: (value: boolean) => void;
+}
+
+const ConfirmationModal = ({
+  modalProps = {},
+  close,
+  resolve,
+}: ConfirmationModalProps) => {
   const { t } = useTranslation();
   const { title, message, confirmText, cancelText } = modalProps;
 
   const handleConfirm = () => {
-    if (resolve) resolve(true);
+    resolve?.(true);
     close();
   };
+
   const handleCancel = () => {
-    if (resolve) resolve(false);
+    resolve?.(false);
     close();
   };
 
@@ -20,12 +37,12 @@ const ConfirmationModal = ({ modalProps = {}, close, resolve }) => {
       onClose={handleCancel}
       footer={
         <>
-          <button className="btn btn-outline btn-primary" onClick={handleCancel}>
+          <Button variant="outline" onClick={handleCancel}>
             {cancelText ? t(cancelText) : t("Cancel")}
-          </button>
-          <button className="btn btn-primary" onClick={handleConfirm}>
+          </Button>
+          <Button onClick={handleConfirm}>
             {confirmText ? t(confirmText) : t("Confirm")}
-          </button>
+          </Button>
         </>
       }
     >
