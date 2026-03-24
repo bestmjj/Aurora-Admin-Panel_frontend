@@ -6,7 +6,7 @@ import { AtSign } from "lucide-react";
 import { GET_SERVER_QUERY, ADD_SERVER_MUTATION, UPDATE_SERVER_MUTATION, DELETE_SERVER_MUTATION } from "../../queries/server";
 import { GET_SECRETS_QUERY, UPLOAD_FILE_MUTATION } from "../../queries/file";
 import { useModal } from "../../atoms/modal";
-import { FileTypeEnum } from "../../store/apis/types.generated";
+import { FileTypeEnum } from "@/types/generated";
 import DataLoading from "../DataLoading";
 import { notify } from "../../atoms/notification";
 import ModalShell from "../ui/ModalShell";

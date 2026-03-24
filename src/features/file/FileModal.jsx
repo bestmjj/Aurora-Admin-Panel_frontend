@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { gql, useMutation } from "@apollo/client";
 import classNames from "classnames";
-import { FileTypeEnum } from "../../store/apis/types.generated";
+import { FileTypeEnum } from "@/types/generated";
 import Error from "../layout/Error";
 import ModalShell from "../ui/ModalShell";
 

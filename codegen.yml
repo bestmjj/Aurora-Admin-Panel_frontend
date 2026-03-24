@@ -1,11 +1,11 @@
 overwrite: true
 schema: 'http://localhost:8000/api/graphql'
-documents: 'src/**/*.jsx'
+documents: 'src/**/*.{jsx,tsx,ts}'
 watchConfig:
   usePolling: true
   interval: 1000
 generates:
-  src/store/apis/types.generated.ts:
+  src/types/generated.ts:
     plugins:
       - typescript
     config:
@@ -13,7 +13,7 @@ generates:
   src/:
     preset: near-operation-file
     presetConfig:
-      baseTypesPath: store/apis/types.generated.ts
+      baseTypesPath: types/generated.ts
     plugins:
       - add:
           content: >
@@ -30,9 +30,5 @@ generates:
              * for this file to be re-created
              */
       - typescript-operations
-      - typescript-rtk-query:
-          importBaseApiFrom: 'src/store/graphqlBaseApi'
-          exportHooks: true
-          overrideExisting: true
     config:
       maybeValue: T # normally, this would be T | null, but our msw mock returns everything as nullable, so we want to force these as non-nullalbe
