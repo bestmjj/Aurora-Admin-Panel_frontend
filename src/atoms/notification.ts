@@ -3,25 +3,46 @@ import { useReducerAtom } from "jotai/utils";
 
 const DEFAULT_DURATION = 5000;
 
-export const notificationsAtom = atom([]);
+export type NotificationType = "info" | "success" | "warning" | "error";
 
-const notificationsReducer = (prev, action) => {
+export interface Notification {
+    id: number;
+    title: string;
+    body: string;
+    type: NotificationType;
+    duration: number;
+}
+
+interface AddNotificationInput {
+    title?: string;
+    body?: string;
+    type?: NotificationType;
+    duration?: number;
+}
+
+type NotificationAction =
+    | { type: "addNotification"; payload: Notification }
+    | { type: "removeNotification"; payload: number };
+
+export const notificationsAtom = atom<Notification[]>([]);
+
+const notificationsReducer = (prev: Notification[], action: NotificationAction): Notification[] => {
     switch (action.type) {
         case "addNotification":
             return [...prev, action.payload];
         case "removeNotification":
             return prev.filter((notification) => notification.id !== action.payload);
         default:
-            throw new Error(`Unhandled action type: ${action.type}`);
+            throw new Error(`Unhandled action type: ${(action as { type: string }).type}`);
     }
 };
 
 export const useNotificationsReducer = () => {
     const [notifications, dispatch] = useReducerAtom(notificationsAtom, notificationsReducer);
 
-    const addNotification = ({ title = "", body = "", type = "info", duration = DEFAULT_DURATION }) => {
+    const addNotification = ({ title = "", body = "", type = "info", duration = DEFAULT_DURATION }: AddNotificationInput) => {
         const id = Date.now(); // Use timestamp as a unique ID
-        const notification = { id, title, body, type, duration };
+        const notification: Notification = { id, title, body, type, duration };
 
         dispatch({ type: "addNotification", payload: notification });
 
@@ -31,7 +52,7 @@ export const useNotificationsReducer = () => {
         }, duration);
     };
 
-    const removeNotification = (id) => {
+    const removeNotification = (id: number) => {
         dispatch({ type: "removeNotification", payload: id });
     };
 
@@ -43,10 +64,10 @@ export const useNotificationsReducer = () => {
 };
 
 // Non-hook API for triggering notifications outside React components
-export const notify = ({ title = "", body = "", type = "info", duration = DEFAULT_DURATION }) => {
+export const notify = ({ title = "", body = "", type = "info", duration = DEFAULT_DURATION }: AddNotificationInput) => {
     const store = getDefaultStore();
     const id = Date.now();
-    const notification = { id, title, body, type, duration };
+    const notification: Notification = { id, title, body, type, duration };
 
     // Add notification
     store.set(notificationsAtom, (prev) => [...prev, notification]);

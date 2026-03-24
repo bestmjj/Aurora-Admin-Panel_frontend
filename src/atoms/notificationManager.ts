@@ -1,12 +1,31 @@
+export type NotificationType = "info" | "success" | "warning" | "error";
+
+export interface NotificationItem {
+    id: number;
+    title: string;
+    body: string;
+    type: NotificationType;
+    duration: number;
+}
+
+interface AddNotificationInput {
+    title?: string;
+    body?: string;
+    type?: NotificationType;
+    duration?: number;
+}
+
 class NotificationManager extends EventTarget {
+    notifications: NotificationItem[];
+
     constructor() {
         super();
         this.notifications = [];
     }
 
-    addNotification({ title = "", body = "", type = "info", duration = 5000 }) {
+    addNotification({ title = "", body = "", type = "info", duration = 5000 }: AddNotificationInput) {
         const id = Date.now(); // Use timestamp as a unique ID
-        const notification = { id, title, body, type, duration };
+        const notification: NotificationItem = { id, title, body, type, duration };
         this.notifications.push(notification);
         this.dispatchEvent(new CustomEvent('notification', { detail: this.notifications }));
 
@@ -15,12 +34,12 @@ class NotificationManager extends EventTarget {
         }, duration);
     }
 
-    removeNotification(id) {
+    removeNotification(id: number) {
         this.notifications = this.notifications.filter(notification => notification.id !== id);
         this.dispatchEvent(new CustomEvent('notification', { detail: this.notifications }));
     }
 
-    getNotifications() {
+    getNotifications(): NotificationItem[] {
         return this.notifications;
     }
 }

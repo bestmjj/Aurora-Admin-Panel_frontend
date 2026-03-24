@@ -2,7 +2,7 @@ import { atom, useAtom } from "jotai";
 
 let modalCounter = 0;
 
-const createModalId = () => {
+const createModalId = (): string => {
   if (typeof globalThis?.crypto?.randomUUID === "function") {
     return globalThis.crypto.randomUUID();
   }
@@ -10,7 +10,33 @@ const createModalId = () => {
   return `modal-${Date.now()}-${modalCounter}`;
 };
 
-const settleModal = (modal, value) => {
+export interface ModalOptions {
+  hasBackdrop?: boolean;
+  closeOnBackdrop?: boolean;
+  closeOnEsc?: boolean;
+  dismissible?: boolean;
+}
+
+export interface ModalEntry {
+  id: string;
+  type: string;
+  props: Record<string, unknown>;
+  options: ModalOptions;
+  defaultResult?: unknown;
+  createdAt: number;
+  resolver: (value: unknown) => void;
+  _settled: boolean;
+}
+
+interface ModalState {
+  stack: ModalEntry[];
+}
+
+export interface ModalPromise<T = unknown> extends Promise<T> {
+  modalId?: string;
+}
+
+const settleModal = (modal: ModalEntry | undefined, value: unknown): void => {
   if (!modal || modal._settled || typeof modal.resolver !== "function") {
     return;
   }
@@ -18,18 +44,18 @@ const settleModal = (modal, value) => {
   modal.resolver(value);
 };
 
-export const modalAtom = atom({
+export const modalAtom = atom<ModalState>({
   stack: [],
 });
 
 export const useModal = () => {
   const [modalState, setModalState] = useAtom(modalAtom);
 
-  const open = (type, props = {}, options = {}) => {
+  const open = (type: string, props: Record<string, unknown> = {}, options: ModalOptions & { defaultResult?: unknown } = {}): ModalPromise => {
     const { defaultResult, ...modalOptions } = options || {};
     const modalId = createModalId();
 
-    const promise = new Promise((resolver) => {
+    const promise: ModalPromise = new Promise((resolver) => {
       setModalState((prev) => ({
         ...prev,
         stack: [
@@ -58,7 +84,7 @@ export const useModal = () => {
     return promise;
   };
 
-  const resolveModal = (modalId, value) => {
+  const resolveModal = (modalId: string, value: unknown): void => {
     setModalState((prev) => {
       const target = prev.stack.find((modal) => modal.id === modalId);
       settleModal(target, value);
@@ -66,7 +92,7 @@ export const useModal = () => {
     });
   };
 
-  const close = (modalId) => {
+  const close = (modalId?: string): void => {
     setModalState((prev) => {
       if (!prev.stack.length) return prev;
 
@@ -83,7 +109,7 @@ export const useModal = () => {
     });
   };
 
-  const closeAll = () => {
+  const closeAll = (): void => {
     setModalState((prev) => {
       prev.stack.forEach((modal) => settleModal(modal, modal.defaultResult));
       return {
@@ -93,12 +119,12 @@ export const useModal = () => {
     });
   };
 
-  const replaceTop = (type, props = {}, options = {}) => {
+  const replaceTop = (type: string, props: Record<string, unknown> = {}, options: ModalOptions & { defaultResult?: unknown } = {}): ModalPromise => {
     close();
     return open(type, props, options);
   };
 
-  const confirm = async (props = {}, options = {}) => {
+  const confirm = async (props: Record<string, unknown> = {}, options: ModalOptions & { defaultResult?: unknown } = {}): Promise<boolean> => {
     const result = await open("confirmation", props, {
       defaultResult: false,
       ...options,
@@ -121,4 +147,3 @@ export const useModal = () => {
     confirm,
   };
 };
-
