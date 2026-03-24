@@ -1,28 +1,36 @@
+import type { FC } from "react";
 import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import { ExternalLink } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import ProfileImg from "../../assets/img/profile.jpg";
 
-const communityLinks = [
+interface LinkItem {
+  label: string;
+  href: string;
+  desc?: string;
+}
+
+const communityLinks: LinkItem[] = [
   { label: "GitHub", href: "https://github.com/aurora-admin-panel", desc: "aurora-admin-panel" },
   { label: "Telegram", href: "http://t.me/aurora_admin_panel", desc: "@aurora_admin_panel" },
 ];
 
-const supportLinks = [
+const supportLinks: LinkItem[] = [
   { label: "PayPal", href: "https://paypal.me/leishi1313" },
   { label: "GitHub Sponsors", href: "https://github.com/sponsors/LeiShi1313/" },
   { label: "Stripe", href: "https://buy.stripe.com/eVacQl8Xvd51cAU000" },
 ];
 
-const cryptoLinks = [
+const cryptoLinks: LinkItem[] = [
   { label: "BTC", href: "https://github.com/sponsors/LeiShi1313/" },
   { label: "ETH", href: "https://github.com/sponsors/LeiShi1313/" },
   { label: "USDT", href: "https://github.com/sponsors/LeiShi1313/" },
 ];
 
-function About() {
+const About: FC = () => {
   const { t } = useTranslation();
-  const version = import.meta.env.VITE_APP_VERSION;
+  const version = import.meta.env.VITE_APP_VERSION as string | undefined;
 
   return (
     <div className="mx-auto max-w-lg px-6 py-12">
@@ -58,7 +66,7 @@ function About() {
               href={link.href}
               target="_blank"
               rel="noopener noreferrer"
-              className="group flex items-center justify-between rounded-lg px-3 py-2.5 transition-colors hover:bg-base-content/5"
+              className="group flex items-center justify-between rounded-lg px-3 py-2.5 transition-colors hover:bg-foreground/5"
             >
               <span className="text-sm font-medium">{link.label}</span>
               <span className="flex items-center gap-1.5 text-xs opacity-30 transition-opacity group-hover:opacity-60">
@@ -103,15 +111,11 @@ function About() {
         </p>
         <div className="mt-4 flex flex-wrap gap-2 px-3">
           {supportLinks.map((s) => (
-            <a
-              key={s.label}
-              href={s.href}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn btn-sm btn-primary"
-            >
-              {s.label}
-            </a>
+            <Button key={s.label} size="sm" asChild>
+              <a href={s.href} target="_blank" rel="noopener noreferrer">
+                {s.label}
+              </a>
+            </Button>
           ))}
         </div>
         <div className="mt-3 flex gap-3 px-3 text-xs">
@@ -130,6 +134,6 @@ function About() {
       </motion.div>
     </div>
   );
-}
+};
 
 export default About;
