@@ -1,4 +1,4 @@
-import { lazy } from "react";
+import { lazy, type FC } from "react";
 import { Helmet } from "react-helmet-async";
 import { useTranslation } from "react-i18next";
 import {
@@ -8,7 +8,7 @@ import {
   Navigate,
 } from "react-router-dom";
 import ThemedSuspense from "./features/ThemedSuspense";
-import { routes } from "./routes";
+import { routes, type RouteConfig } from "./routes";
 
 const ModalManager = lazy(() => import("./features/modal/ModalManager"));
 const Notification = lazy(() => import("./features/Notification"));
@@ -30,9 +30,11 @@ const About = lazy(() => import("./features/about/About"));
 const Themes = lazy(() => import("./features/layout/Themes"));
 const NoMatch = lazy(() => import("./features/layout/NoMatch"));
 
-const App = () => {
+const App: FC = () => {
   const { t } = useTranslation();
-  const routeMap = Object.fromEntries(routes.map((route) => [route.key, route]));
+  const routeMap: Record<string, RouteConfig> = Object.fromEntries(
+    routes.map((route) => [route.key, route])
+  );
 
   return (
     <Router>
@@ -46,7 +48,7 @@ const App = () => {
         <Route path={routeMap.createAccount.path} element={<CreateAccount />} />
         <Route path="test" element={<ThemedSuspense />} />
         <Route path={routeMap.app.path} element={<Layout />}>
-          <Route index element={<Navigate to={routeMap.servers.fullPath} replace />} />
+          <Route index element={<Navigate to={routeMap.servers.fullPath!} replace />} />
           <Route path={routeMap.servers.path} element={<ServerContainer />}>
             <Route path={routeMap.serverId.path} element={<DeploymentList />} />
             <Route path={routeMap.serverPorts.path} element={<ServerPorts />} />
@@ -60,13 +62,13 @@ const App = () => {
           <Route path={routeMap.services.path} element={<ServiceListPage />} />
           <Route
             path={routeMap.deployments.path}
-            element={<Navigate to={routeMap.servers.fullPath} replace />}
+            element={<Navigate to={routeMap.servers.fullPath!} replace />}
           />
           <Route path={routeMap.serviceEditor.path} element={<ServiceEditorPage />} />
           <Route path={routeMap.serviceEditorById.path} element={<ServiceEditorPage />} />
           <Route
             path={routeMap.formRedirect.path}
-            element={<Navigate to={routeMap.serviceEditor.fullPath} replace />}
+            element={<Navigate to={routeMap.serviceEditor.fullPath!} replace />}
           />
           <Route path={routeMap.themes.path} element={<Themes />} />
           <Route path="*" element={<NoMatch />} />
@@ -76,7 +78,7 @@ const App = () => {
         {/* <Route path="/app/*" element={<Layout />} /> */}
         <Route
           path={routeMap.root.path}
-          element={<Navigate to={routeMap.login.fullPath} replace />}
+          element={<Navigate to={routeMap.login.fullPath!} replace />}
         />
       </Routes>
     </Router>

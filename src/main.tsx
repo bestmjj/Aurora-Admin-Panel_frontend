@@ -3,6 +3,7 @@ import React, { Suspense } from "react";
 import ReactDOM from "react-dom/client";
 import { Provider } from "react-redux";
 import * as Sentry from "@sentry/react";
+import { BrowserTracing } from "@sentry/tracing";
 import { PersistGate } from "redux-persist/integration/react";
 
 import "./index.css";
@@ -26,7 +27,7 @@ if (!!!import.meta.env.DEV) {
   });
 }
 
-ReactDOM.createRoot(document.getElementById("root")).render(
+ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <ApolloProvider client={client}>
       <Provider store={store}>

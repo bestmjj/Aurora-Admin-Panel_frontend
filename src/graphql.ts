@@ -5,7 +5,8 @@ import {
   InMemoryCache,
   from,
   concat,
-  ApolloLink
+  ApolloLink,
+  type NormalizedCacheObject,
 } from "@apollo/client";
 import { onError } from "@apollo/client/link/error";
 import { createUploadLink } from "apollo-upload-client";
@@ -32,17 +33,17 @@ const errorLink = onError(({ graphQLErrors, networkError }) => {
     })
 });
 
-const getTokenFromStorage = () => {
+const getTokenFromStorage = (): string | null => {
   if (!window.localStorage.getItem("auth")) return null
   try {
-    return `Bearer ${JSON.parse(window.localStorage.getItem("auth")).token}`
+    return `Bearer ${JSON.parse(window.localStorage.getItem("auth")!).token}`
   } catch (error) {
     return null
   }
 }
 
 const authMiddleware = new ApolloLink((operation, forward) => {
-  operation.setContext(({ headers = {} }) => ({
+  operation.setContext(({ headers = {} }: { headers?: Record<string, string> }) => ({
     headers: {
       ...headers,
       Authorization: getTokenFromStorage(),
@@ -51,7 +52,7 @@ const authMiddleware = new ApolloLink((operation, forward) => {
   return forward(operation);
 })
 
-const getCombinedLink = () => from([errorLink, split(
+const getCombinedLink = (): ApolloLink => from([errorLink, split(
   ({ query }) => {
     const definition = getMainDefinition(query);
     return (
@@ -69,12 +70,12 @@ const getCombinedLink = () => from([errorLink, split(
       lazy: true,
     })
   ),
-  concat(authMiddleware, createUploadLink({ uri: "/api/graphql" }))
+  concat(authMiddleware, createUploadLink({ uri: "/api/graphql" }) as unknown as ApolloLink)
 )]);
 
-export const client = new ApolloClient({
+export const client: ApolloClient<NormalizedCacheObject> = new ApolloClient({
   cache: new InMemoryCache(),
   link: getCombinedLink(),
 });
 
-export const resetGraphQLLink = () => client.setLink(getCombinedLink())
+export const resetGraphQLLink = (): void => { client.setLink(getCombinedLink()) }
