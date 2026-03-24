@@ -1,6 +1,18 @@
-import { AtSign, FileCode2, FileUp, Layers, Users } from "lucide-react";
+import { AtSign, FileCode2, FileUp, Layers, Users, type LucideIcon } from "lucide-react";
 
-export const routes = [
+export interface RouteConfig {
+  key: string;
+  path: string;
+  fullPath?: string;
+  area: string;
+  labelKey?: string;
+  icon?: LucideIcon;
+  permissions?: string[];
+  nav?: boolean;
+  end?: boolean;
+}
+
+export const routes: RouteConfig[] = [
   {
     key: "root",
     path: "/",
