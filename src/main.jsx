@@ -8,6 +8,7 @@ import { PersistGate } from "redux-persist/integration/react";
 import "./index.css";
 import App from "./App";
 import i18n from "./i18n";
+import { HelmetProvider } from "react-helmet-async";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { store, persistor } from "./store";
 import ThemedSuspense from "./features/ThemedSuspense";
@@ -31,9 +32,11 @@ ReactDOM.createRoot(document.getElementById("root")).render(
       <Provider store={store}>
         <PersistGate loading={null} persistor={persistor}>
           <ThemeProvider>
-            <Suspense fallback={<ThemedSuspense />}>
-              <App />
-            </Suspense>
+            <HelmetProvider>
+              <Suspense fallback={<ThemedSuspense />}>
+                <App />
+              </Suspense>
+            </HelmetProvider>
           </ThemeProvider>
         </PersistGate>
       </Provider>
