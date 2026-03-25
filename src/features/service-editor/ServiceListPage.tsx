@@ -1,8 +1,7 @@
-import { useState } from "react";
 import { gql, useQuery } from "@apollo/client";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Plus, RefreshCw, ArrowUpRight, Link as LinkIcon, Hub } from "lucide-react";
+import { Plus, RefreshCw, ArrowUpRight, Link as LinkIcon, Workflow } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -15,8 +14,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import DataLoading from "../DataLoading";
-import { Dialog } from "@/components/ui/dialog";
-import BindingModal from "../deployment/BindingModal";
+import { useModal } from "../../atoms/modal";
 
 const LIST_SERVICE_DEFINITIONS = gql`
   query ListServiceDefinitionsForPage($limit: Int, $offset: Int) {
@@ -48,7 +46,7 @@ interface ServiceItem {
 const ServiceListPage = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const [bindingTarget, setBindingTarget] = useState<{ serviceId: string; serviceTitle: string } | null>(null);
+  const { open } = useModal();
   const { data, loading, error, refetch } = useQuery(LIST_SERVICE_DEFINITIONS, {
     variables: { limit: 200, offset: 0 },
     fetchPolicy: "network-only",
@@ -101,7 +99,7 @@ const ServiceListPage = () => {
           ) : items.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-24">
               <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/8">
-                <Hub size={28} className="text-primary/50" />
+                <Workflow size={28} className="text-primary/50" />
               </div>
               <h2 className="mt-5 text-lg font-bold tracking-tight">{t("No services yet")}</h2>
               <p className="mt-1.5 max-w-xs text-center text-sm text-muted-foreground">
@@ -139,7 +137,7 @@ const ServiceListPage = () => {
                     <TableCell>
                       <div className="flex items-center gap-3">
                         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                          <Hub size={16} />
+                          <Workflow size={16} />
                         </div>
                         <div>
                           <span className="text-sm font-semibold">{item.title || "-"}</span>
@@ -183,7 +181,7 @@ const ServiceListPage = () => {
                           size="xs"
                           onClick={(e) => {
                             e.stopPropagation();
-                            setBindingTarget({ serviceId: item.id, serviceTitle: item.title || item.serviceKey });
+                            open("binding", { serviceId: item.id, serviceTitle: item.title || item.serviceKey });
                           }}
                         >
                           <LinkIcon size={14} />
@@ -211,17 +209,6 @@ const ServiceListPage = () => {
         </CardContent>
       </Card>
 
-      {/* Binding modal */}
-      {bindingTarget && (
-        <Dialog open={!!bindingTarget} onOpenChange={(open) => !open && setBindingTarget(null)}>
-          <BindingModal
-            open={!!bindingTarget}
-            onOpenChange={(open) => !open && setBindingTarget(null)}
-            serviceId={bindingTarget.serviceId}
-            serviceTitle={bindingTarget.serviceTitle}
-          />
-        </Dialog>
-      )}
     </div>
   );
 };

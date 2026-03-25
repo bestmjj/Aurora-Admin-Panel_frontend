@@ -51,16 +51,6 @@ const ServerCard = ({ server, refetch, metric }: ServerCardProps) => {
           : "border-border bg-card hover:-translate-y-0.5 hover:shadow-xl hover:shadow-foreground/4"
       )}
     >
-      {/* Status accent -- communicates health at a glance */}
-      <div
-        className={cn(
-          "h-[3px] w-full rounded-t-xl transition-colors duration-500",
-          isConnecting && "bg-amber-500/70",
-          isDown && "bg-destructive/40",
-          sshConnected === true && "bg-primary/70"
-        )}
-      />
-
       {/* Identity zone */}
       <div className="flex items-start gap-3 px-4 pt-3">
         <div className="min-w-0 flex-1">

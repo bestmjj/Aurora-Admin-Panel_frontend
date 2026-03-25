@@ -63,12 +63,7 @@ const ServerRow = ({ server, refetch, metric, index = 0 }: ServerRowProps) => {
       )}
       style={{ animationDelay: `${index * 40}ms` }}
     >
-      <td className={cn(
-        "rounded-l-xl p-4 sticky top-0 left-0 z-10 bg-card border-l-[3px]",
-        sshConnected === null && "border-l-amber-500/70",
-        sshConnected === false && "border-l-destructive/40",
-        sshConnected === true && "border-l-primary/70"
-      )}>
+      <td className="rounded-l-xl p-4 sticky top-0 left-0 z-10 bg-card">
         <div className="flex flex-col">
           <h1 className="break-words text-sm font-bold tracking-tight">{server.name}</h1>
           <span className="font-mono text-[10px] opacity-20">{server.address}</span>
