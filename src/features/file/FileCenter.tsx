@@ -2,7 +2,6 @@ import { useQuery } from "@apollo/client";
 import { motion, AnimatePresence } from "framer-motion";
 import { Upload } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -109,46 +108,42 @@ const FileCenter = () => {
         ) : isEmpty ? (
           <FileEmptyState onAdd={handleAdd} />
         ) : (
-          <Card>
-            <CardContent className="p-0">
-              <div className="overflow-x-auto">
-                <AnimatePresence mode="wait">
-                  <motion.div
-                    key={`page-${offset}`}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>{t("Name")}</TableHead>
-                          <TableHead>{t("Type")}</TableHead>
-                          <TableHead>{t("Size")}</TableHead>
-                          <TableHead>{t("Version")}</TableHead>
-                          <TableHead>{t("Updated")}</TableHead>
-                          <TableHead className="text-right">
-                            {t("Actions")}
-                          </TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {files.map((file, i) => (
-                          <FileRow
-                            key={file.id}
-                            file={file}
-                            onUpdate={refetch}
-                            index={i}
-                          />
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </motion.div>
-                </AnimatePresence>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="overflow-x-auto rounded-xl border border-border/50 bg-card">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={`page-${offset}`}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>{t("Name")}</TableHead>
+                      <TableHead>{t("Type")}</TableHead>
+                      <TableHead>{t("Size")}</TableHead>
+                      <TableHead>{t("Version")}</TableHead>
+                      <TableHead>{t("Updated")}</TableHead>
+                      <TableHead className="text-right">
+                        {t("Actions")}
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {files.map((file, i) => (
+                      <FileRow
+                        key={file.id}
+                        file={file}
+                        onUpdate={refetch}
+                        index={i}
+                      />
+                    ))}
+                  </TableBody>
+                </Table>
+              </motion.div>
+            </AnimatePresence>
+          </div>
         )}
         {!isEmpty && (
           <Paginator

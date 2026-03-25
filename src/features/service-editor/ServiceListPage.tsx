@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Plus, RefreshCw, ArrowUpRight, Link as LinkIcon, Workflow } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Table,
@@ -90,33 +89,32 @@ const ServiceListPage = () => {
         </div>
       </div>
 
-      <Card className="overflow-hidden">
-        <CardContent className="p-0">
-          {loading ? (
-            <div className="p-6">
-              <DataLoading />
+      <div className="overflow-hidden rounded-xl border border-border/50 bg-card">
+        {loading ? (
+          <div className="p-6">
+            <DataLoading />
+          </div>
+        ) : items.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-24">
+            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/8">
+              <Workflow size={28} className="text-primary/50" />
             </div>
-          ) : items.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-24">
-              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/8">
-                <Workflow size={28} className="text-primary/50" />
-              </div>
-              <h2 className="mt-5 text-lg font-bold tracking-tight">{t("No services yet")}</h2>
-              <p className="mt-1.5 max-w-xs text-center text-sm text-muted-foreground">
-                {t("Create your first service definition to get started.")}
-              </p>
-              <Button
-                variant="default"
-                size="sm"
-                className="mt-6"
-                onClick={() => navigate("/app/services/editor")}
-              >
-                <Plus size={14} />
-                {t("New Service")}
-              </Button>
-            </div>
-          ) : (
-            <Table>
+            <h2 className="mt-5 text-lg font-bold tracking-tight">{t("No services yet")}</h2>
+            <p className="mt-1.5 max-w-xs text-center text-sm text-muted-foreground">
+              {t("Create your first service definition to get started.")}
+            </p>
+            <Button
+              variant="default"
+              size="sm"
+              className="mt-6"
+              onClick={() => navigate("/app/services/editor")}
+            >
+              <Plus size={14} />
+              {t("New Service")}
+            </Button>
+          </div>
+        ) : (
+          <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>{t("Service")}</TableHead>
@@ -206,8 +204,7 @@ const ServiceListPage = () => {
               </TableBody>
             </Table>
           )}
-        </CardContent>
-      </Card>
+      </div>
 
     </div>
   );
