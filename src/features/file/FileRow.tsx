@@ -33,7 +33,7 @@ interface FileTypeConfigEntry {
 const fileTypeConfig: Record<string, FileTypeConfigEntry> = {
   IMAGE: {
     icon: Image,
-    iconBg: "bg-secondary/10 text-secondary",
+    iconBg: "bg-amber-500/10 text-amber-600",
     label: "IMAGE",
   },
   VIDEO: {
