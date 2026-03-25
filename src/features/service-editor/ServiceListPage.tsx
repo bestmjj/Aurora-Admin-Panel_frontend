@@ -1,9 +1,9 @@
+import { useState } from "react";
 import { gql, useQuery } from "@apollo/client";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Plus, Pencil, Link as LinkIcon, RefreshCw } from "lucide-react";
+import { Plus, RefreshCw, ArrowUpRight, Link as LinkIcon, Hub } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
@@ -15,7 +15,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import DataLoading from "../DataLoading";
-import { useModal } from "../../atoms/modal";
+import { Dialog } from "@/components/ui/dialog";
+import BindingModal from "../deployment/BindingModal";
 
 const LIST_SERVICE_DEFINITIONS = gql`
   query ListServiceDefinitionsForPage($limit: Int, $offset: Int) {
@@ -47,7 +48,7 @@ interface ServiceItem {
 const ServiceListPage = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { open } = useModal();
+  const [bindingTarget, setBindingTarget] = useState<{ serviceId: string; serviceTitle: string } | null>(null);
   const { data, loading, error, refetch } = useQuery(LIST_SERVICE_DEFINITIONS, {
     variables: { limit: 200, offset: 0 },
     fetchPolicy: "network-only",
@@ -67,9 +68,9 @@ const ServiceListPage = () => {
 
   return (
     <div className="mx-auto w-full max-w-screen-2xl px-4 py-4">
-      <div className="mb-4 flex items-center justify-between">
+      <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">{t("Service Definitions")}</h1>
+          <h2 className="text-2xl font-bold tracking-tight">{t("Service Definitions")}</h2>
           <p className="text-sm text-muted-foreground">
             {t("Browse saved services, then open one in the editor to edit and save.")}
           </p>
@@ -91,21 +92,37 @@ const ServiceListPage = () => {
         </div>
       </div>
 
-      <Card>
+      <Card className="overflow-hidden">
         <CardContent className="p-0">
           {loading ? (
             <div className="p-6">
               <DataLoading />
             </div>
           ) : items.length === 0 ? (
-            <div className="p-6 text-sm text-muted-foreground">{t("No services found.")}</div>
+            <div className="flex flex-col items-center justify-center py-24">
+              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/8">
+                <Hub size={28} className="text-primary/50" />
+              </div>
+              <h2 className="mt-5 text-lg font-bold tracking-tight">{t("No services yet")}</h2>
+              <p className="mt-1.5 max-w-xs text-center text-sm text-muted-foreground">
+                {t("Create your first service definition to get started.")}
+              </p>
+              <Button
+                variant="default"
+                size="sm"
+                className="mt-6"
+                onClick={() => navigate("/app/services/editor")}
+              >
+                <Plus size={14} />
+                {t("New Service")}
+              </Button>
+            </div>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>ID</TableHead>
-                  <TableHead>{t("Title")}</TableHead>
-                  <TableHead>{t("Service Key")}</TableHead>
+                  <TableHead>{t("Service")}</TableHead>
+                  <TableHead>{t("Identifier")}</TableHead>
                   <TableHead>{t("Version")}</TableHead>
                   <TableHead>{t("Status")}</TableHead>
                   <TableHead>{t("Updated")}</TableHead>
@@ -119,50 +136,72 @@ const ServiceListPage = () => {
                     className="cursor-pointer"
                     onClick={() => navigate(`/app/services/editor/${item.id}`)}
                   >
-                    <TableCell>{item.id}</TableCell>
                     <TableCell>
-                      <div className="font-semibold">{item.title || "-"}</div>
-                      {item.description ? (
-                        <div className="max-w-md truncate text-xs text-muted-foreground">
-                          {item.description}
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                          <Hub size={16} />
                         </div>
-                      ) : null}
+                        <div>
+                          <span className="text-sm font-semibold">{item.title || "-"}</span>
+                          {item.description && (
+                            <div className="max-w-md truncate text-xs text-muted-foreground">
+                              {item.description}
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     </TableCell>
-                    <TableCell className="font-mono text-xs">{item.serviceKey}</TableCell>
-                    <TableCell>{item.version}</TableCell>
+                    <TableCell className="text-sm font-medium text-muted-foreground">
+                      {item.serviceKey}
+                    </TableCell>
                     <TableCell>
-                      <Badge variant={item.isActive ? "default" : "outline"}>
-                        {item.isActive ? t("Active") : t("Inactive")}
-                      </Badge>
+                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-muted text-muted-foreground border border-border">
+                        v{item.version}
+                      </span>
                     </TableCell>
-                    <TableCell className="text-xs">
+                    <TableCell>
+                      {item.isActive ? (
+                        <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-600">
+                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                          {t("Active")}
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground italic">
+                          <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/40" />
+                          {t("Inactive")}
+                        </span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
                       {item.updatedAt ? new Date(item.updatedAt).toLocaleString() : "-"}
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="xs"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          open("binding", { serviceId: item.id, serviceTitle: item.title || item.serviceKey });
-                        }}
-                      >
-                        <LinkIcon size={14} />
-                        {t("Bindings")}
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="xs"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigate(`/app/services/editor/${item.id}`);
-                        }}
-                      >
-                        <Pencil size={14} />
-                        {t("Open")}
-                      </Button>
+                      <div className="flex items-center justify-end gap-1">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="xs"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setBindingTarget({ serviceId: item.id, serviceTitle: item.title || item.serviceKey });
+                          }}
+                        >
+                          <LinkIcon size={14} />
+                          {t("Bindings")}
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          size="xs"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/app/services/editor/${item.id}`);
+                          }}
+                        >
+                          {t("Open")}
+                          <ArrowUpRight size={14} />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -171,6 +210,18 @@ const ServiceListPage = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Binding modal */}
+      {bindingTarget && (
+        <Dialog open={!!bindingTarget} onOpenChange={(open) => !open && setBindingTarget(null)}>
+          <BindingModal
+            open={!!bindingTarget}
+            onOpenChange={(open) => !open && setBindingTarget(null)}
+            serviceId={bindingTarget.serviceId}
+            serviceTitle={bindingTarget.serviceTitle}
+          />
+        </Dialog>
+      )}
     </div>
   );
 };

@@ -5,7 +5,7 @@ import { useMutation } from "@apollo/client";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { TableCell, TableRow as ShadcnTableRow } from "@/components/ui/table";
+import { TableCell } from "@/components/ui/table";
 import { getReadableSize } from "../../utils/formatter";
 import { useModal } from "../../atoms/modal";
 import { downloadFile } from "../../utils/download";
@@ -140,74 +140,73 @@ const FileRow = ({ file, onUpdate, index = 0 }: FileRowProps) => {
       className="cursor-pointer hover:bg-muted/50"
       onClick={handleCheck}
     >
-      {/* Type icon */}
-      <td className="w-0 pr-0">
-        <div
-          className={cn(
-            "flex h-8 w-8 items-center justify-center rounded-lg",
-            config.iconBg,
-          )}
-        >
-          <IconComponent size={16} />
-        </div>
-      </td>
-
-      {/* Name + notes */}
-      <td>
-        <div className="font-semibold">{file.name}</div>
-        {file.notes && (
-          <div className="max-w-xs truncate text-xs opacity-50">
-            {file.notes}
+      {/* Name with icon */}
+      <TableCell className="px-6 py-5">
+        <div className="flex items-center gap-3">
+          <div
+            className={cn(
+              "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg",
+              config.iconBg,
+            )}
+          >
+            <IconComponent size={16} />
           </div>
-        )}
-      </td>
+          <div>
+            <span className="text-sm font-semibold">{file.name}</span>
+            {file.notes && (
+              <div className="max-w-xs truncate text-xs text-muted-foreground">
+                {file.notes}
+              </div>
+            )}
+          </div>
+        </div>
+      </TableCell>
 
       {/* Type */}
-      <td>
-        <Badge
-          variant={file.type === "SECRET" ? "destructive" : "ghost"}
-          className="text-xs"
-        >
+      <TableCell>
+        <span className={cn(
+          "inline-flex px-2 py-0.5 rounded text-[10px] font-bold border",
+          file.type === "SECRET"
+            ? "bg-destructive/10 text-destructive border-destructive/20"
+            : "bg-muted text-muted-foreground border-border"
+        )}>
           {t(file.type)}
-        </Badge>
-      </td>
+        </span>
+      </TableCell>
 
       {/* Size */}
-      <td className="text-xs tabular-nums opacity-70">
+      <TableCell className="text-sm text-muted-foreground tabular-nums">
         {getReadableSize(file.size)}
-      </td>
+      </TableCell>
 
       {/* Version */}
-      <td className="text-xs opacity-50">{file.version || "-"}</td>
+      <TableCell>
+        {file.version ? (
+          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-muted text-muted-foreground border border-border">
+            v{file.version}
+          </span>
+        ) : (
+          <span className="text-sm text-muted-foreground">-</span>
+        )}
+      </TableCell>
 
       {/* Updated */}
-      <td className="text-xs opacity-50">
+      <TableCell className="text-sm text-muted-foreground">
         {file.updatedAt
           ? new Date(file.updatedAt).toLocaleString()
           : file.createdAt
             ? new Date(file.createdAt).toLocaleString()
             : "-"}
-      </td>
+      </TableCell>
 
       {/* Actions */}
-      <td className="text-right">
-        <div className="flex items-center justify-end gap-0.5">
-          <Button
-            type="button"
-            variant="ghost"
-            size="xs"
-            className="opacity-60 hover:opacity-100"
-            onClick={handleClickCancel}
-            title={t("Delete")}
-          >
-            <Trash2 size={14} />
-          </Button>
+      <TableCell className="text-right">
+        <div className="flex items-center justify-end gap-1">
           {file.type === "EXECUTABLE" && (
             <Button
               type="button"
               variant="ghost"
               size="xs"
-              className="opacity-60 hover:opacity-100"
               onClick={(e) => {
                 e.stopPropagation();
                 open("binding", { fileId: file.id });
@@ -229,8 +228,18 @@ const FileRow = ({ file, onUpdate, index = 0 }: FileRowProps) => {
             {isPreviewable ? <Eye size={14} /> : <Download size={14} />}
             {isPreviewable ? t("Preview") : t("Download")}
           </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="xs"
+            className="text-muted-foreground hover:text-destructive"
+            onClick={handleClickCancel}
+            title={t("Delete")}
+          >
+            <Trash2 size={14} />
+          </Button>
         </div>
-      </td>
+      </TableCell>
     </motion.tr>
   );
 };

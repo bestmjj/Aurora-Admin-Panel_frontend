@@ -123,7 +123,6 @@ const FileCenter = () => {
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead className="w-0" />
                           <TableHead>{t("Name")}</TableHead>
                           <TableHead>{t("Type")}</TableHead>
                           <TableHead>{t("Size")}</TableHead>
