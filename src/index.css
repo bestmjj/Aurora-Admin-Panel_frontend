@@ -2,78 +2,8 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 @import "@fontsource-variable/noto-sans";
-@plugin '@tailwindcss/typography';
-@plugin './plugins/tailwind-mix.js';
-@plugin 'daisyui' {
-  themes: all;
-}
-
-/* Custom DaisyUI v5 themes using the new theme plugin API */
-@plugin 'daisyui/theme' {
-  name: "aurora-classic";
-  color-scheme: light;
-  --color-base-100: #ffffff;
-  --color-neutral: #24262D;
-  --color-primary: #7E3AF2;
-  --color-secondary: #7E3AF2;
-  --color-accent: #7E3AF2;
-  --color-info: #3ABFF8;
-  --color-success: #4ADE80;
-  --color-warning: #FACC15;
-  --color-error: #F87171;
-  /* Optional: app-specific extras carried over */
-  --primary-light: hsl(var(--p) / 0.8);
-  --primary-dark: hsl(var(--p) / 1.2);
-  /* Radius/border (mapped from previous rounded vars) */
-  --radius-box: 1rem;
-  --radius-selector: 0.5rem;
-  --radius-field: 0.25rem;
-  --border-width: 1px;
-}
-
-@plugin 'daisyui/theme' {
-  name: "sunset";
-  color-scheme: dark;
-  --color-base-100: #151726;
-  --color-neutral: #DEE0EF;
-  --color-primary: #EE8679;
-  --color-secondary: #F8D2C9;
-  --color-accent: #5BA2D0;
-  --color-info: #94B8FF;
-  --color-success: #33ddbe;
-  --color-warning: #f6c33f;
-  --color-error: #F87272;
-  --radius-box: 1rem;
-  --radius-selector: 0.5rem;
-  --radius-field: 0.25rem;
-  --border-width: 1px;
-}
-
-@plugin 'daisyui/theme' {
-  name: "morning";
-  color-scheme: light;
-  --color-base-100: #FDFDFE;
-  --color-neutral: #4E5377;
-  --color-primary: #D26A5D;
-  --color-secondary: #F19A8E;
-  --color-accent: #3788BE;
-  --color-info: #7397DE;
-  --color-success: #33ddbe;
-  --color-warning: #f6c33f;
-  --color-error: #F87272;
-  --radius-box: 1rem;
-  --radius-selector: 0.5rem;
-  --radius-field: 0.25rem;
-  --border-width: 1px;
-}
-
 @custom-variant dark (&:is(.dark *));
 
-/* ============================================================
-   shadcn/ui theme variable mappings
-   The --color-* properties map Tailwind's color utilities
-   to the CSS custom properties defined in the theme classes below.
-   ============================================================ */
 @theme inline {
     --font-heading: var(--font-sans);
     --font-sans: 'Noto Sans Variable', sans-serif;
@@ -94,6 +24,7 @@
     --color-input: var(--input);
     --color-border: var(--border);
     --color-destructive: var(--destructive);
+    --color-destructive-foreground: var(--destructive-foreground);
     --color-accent-foreground: var(--accent-foreground);
     --color-accent: var(--accent);
     --color-muted-foreground: var(--muted-foreground);
@@ -119,12 +50,6 @@
     --breakpoint-xs: 475px;
 }
 
-/* ============================================================
-   Aurora Theme Definitions (shadcn variable layer)
-   All color values in OKLCH format.
-   ============================================================ */
-
-/* Aurora Classic — Light (default) */
 :root {
     --background: oklch(1 0 0);
     --foreground: oklch(0.15 0.01 285);
@@ -141,6 +66,7 @@
     --accent: oklch(0.96 0.005 285);
     --accent-foreground: oklch(0.25 0.02 285);
     --destructive: oklch(0.577 0.245 27.325);
+    --destructive-foreground: oklch(0.985 0 0);
     --border: oklch(0.92 0.005 285);
     --input: oklch(0.92 0.005 285);
     --ring: oklch(0.45 0.24 285);
@@ -160,7 +86,6 @@
     --sidebar-ring: oklch(0.45 0.24 285);
 }
 
-/* Aurora Classic — explicit class (same as :root) */
 .theme-aurora-classic {
     --background: oklch(1 0 0);
     --foreground: oklch(0.15 0.01 285);
@@ -177,6 +102,7 @@
     --accent: oklch(0.96 0.005 285);
     --accent-foreground: oklch(0.25 0.02 285);
     --destructive: oklch(0.577 0.245 27.325);
+    --destructive-foreground: oklch(0.985 0 0);
     --border: oklch(0.92 0.005 285);
     --input: oklch(0.92 0.005 285);
     --ring: oklch(0.45 0.24 285);
@@ -196,7 +122,6 @@
     --sidebar-ring: oklch(0.45 0.24 285);
 }
 
-/* Sunset — Dark theme (coral primary on dark navy) */
 .theme-sunset.dark {
     --background: oklch(0.18 0.02 280);
     --foreground: oklch(0.95 0.005 280);
@@ -213,6 +138,7 @@
     --accent: oklch(0.25 0.02 280);
     --accent-foreground: oklch(0.95 0.005 280);
     --destructive: oklch(0.65 0.2 22);
+    --destructive-foreground: oklch(0.985 0 0);
     --border: oklch(1 0 0 / 10%);
     --input: oklch(1 0 0 / 12%);
     --ring: oklch(0.72 0.14 25);
@@ -232,7 +158,6 @@
     --sidebar-ring: oklch(0.72 0.14 25);
 }
 
-/* Morning — Light theme (terracotta primary on near-white) */
 .theme-morning {
     --background: oklch(0.99 0 0);
     --foreground: oklch(0.20 0.03 270);
@@ -249,6 +174,7 @@
     --accent: oklch(0.96 0.005 25);
     --accent-foreground: oklch(0.25 0.03 270);
     --destructive: oklch(0.577 0.245 27.325);
+    --destructive-foreground: oklch(0.985 0 0);
     --border: oklch(0.92 0.005 25);
     --input: oklch(0.92 0.005 25);
     --ring: oklch(0.62 0.14 25);
@@ -268,7 +194,6 @@
     --sidebar-ring: oklch(0.62 0.14 25);
 }
 
-/* Midnight — Dark theme (purple primary on dark background) */
 .theme-midnight.dark {
     --background: oklch(0.16 0.02 285);
     --foreground: oklch(0.95 0.005 285);
@@ -285,6 +210,7 @@
     --accent: oklch(0.28 0.03 285);
     --accent-foreground: oklch(0.95 0.005 285);
     --destructive: oklch(0.65 0.2 22);
+    --destructive-foreground: oklch(0.985 0 0);
     --border: oklch(1 0 0 / 10%);
     --input: oklch(1 0 0 / 12%);
     --ring: oklch(0.55 0.22 285);
@@ -304,9 +230,6 @@
     --sidebar-ring: oklch(0.55 0.22 285);
 }
 
-/* ============================================================
-   Base layer — shadcn defaults
-   ============================================================ */
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -316,26 +239,5 @@
   }
   html {
     font-family: var(--font-sans);
-  }
-}
-
-/* ============================================================
-   DaisyUI component overrides (legacy, to be removed)
-   ============================================================ */
-.menu {
-    :where(li:not(.menu-title):not(:empty)) > :where(:not(ul).active),
-    :where(li:not(.menu-title):not(:empty)) > :where(*:not(ul):active) {
-      @apply bg-transparent text-base-content border-primary border-l-4;
-    }
-}
-
-.stat {
-  @apply gap-x-4 border-base-content/10 px-4 sm:px-6 py-2 sm:py-4;
-
-  &-value {
-    @apply text-2xl font-extrabold;
-  }
-  &-desc {
-    @apply text-base opacity-60;
   }
 }

@@ -1,46 +1,29 @@
-import "./polyfills/symbolObservable"
 import React, { Suspense } from "react";
 import ReactDOM from "react-dom/client";
-import { Provider } from "react-redux";
-import * as Sentry from "@sentry/react";
-import { BrowserTracing } from "@sentry/tracing";
-import { PersistGate } from "redux-persist/integration/react";
 
 import "./index.css";
 import App from "./App";
 import i18n from "./i18n";
 import { HelmetProvider } from "react-helmet-async";
 import { ThemeProvider } from "./components/theme-provider";
-import { store, persistor } from "./store";
+import { TooltipProvider } from "./components/ui/tooltip";
 import ThemedSuspense from "./features/ThemedSuspense";
 import { ApolloProvider } from "@apollo/client";
 import { client } from './graphql'
 import './tailwind-safelist'
 
-if (!!!import.meta.env.DEV) {
-  Sentry.init({
-    // TODO: change Dockerfile
-    release: import.meta.env.VITE_APP_VERSION,
-    dsn: "https://c02ba70afca842c5ac7997aca99c85b8@sentry.leishi.io/4",
-    integrations: [new BrowserTracing()],
-    tracesSampleRate: 1.0,
-  });
-}
-
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <ApolloProvider client={client}>
-      <Provider store={store}>
-        <PersistGate loading={null} persistor={persistor}>
-          <ThemeProvider>
-            <HelmetProvider>
-              <Suspense fallback={<ThemedSuspense />}>
-                <App />
-              </Suspense>
-            </HelmetProvider>
-          </ThemeProvider>
-        </PersistGate>
-      </Provider>
+      <ThemeProvider>
+        <TooltipProvider>
+          <HelmetProvider>
+            <Suspense fallback={<ThemedSuspense />}>
+              <App />
+            </Suspense>
+          </HelmetProvider>
+        </TooltipProvider>
+      </ThemeProvider>
     </ApolloProvider>
   </React.StrictMode>
 );
