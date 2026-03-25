@@ -1,11 +1,11 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import { cn } from "@/lib/utils";
+import { Server as ServerIcon, ArrowUpRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { TableCell, TableRow } from "@/components/ui/table";
+import { toast } from "sonner";
 
-import { useNotificationsReducer } from "../../atoms/notification";
 import { copyToClipboard } from "../../utils/clipboard";
 import ServerPortsStat from "./ServerPortsStat";
 import ServerSSHStat from "./ServerSSHStat";
@@ -35,97 +35,94 @@ interface ServerRowProps {
   server: Server;
   refetch: () => void;
   metric?: ServerMetric | null;
-  index?: number;
 }
 
-const ServerRow = ({ server, refetch, metric, index = 0 }: ServerRowProps) => {
-  const { addNotification } = useNotificationsReducer();
+const ServerRow = ({ server, refetch, metric }: ServerRowProps) => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { sshConnected, setSSHConnected, registerSSHRefetch, handleEdit } = useServerItem(server, refetch, metric);
 
-  const handleCopy = (address: string) => {
-    copyToClipboard(address);
-    addNotification({
-      title: address,
-      body: t("Server address copied to clipboard"),
-      type: "success",
-    });
-  };
-
   return (
-    <tr
-      className={cn(
-        "h-20 w-full rounded-xl ring-1 transition-all duration-200",
-        sshConnected === false
-          ? "ring-destructive/15 bg-muted/40"
-          : "ring-border hover:ring-foreground/12 hover:shadow-md"
-      )}
-      style={{ animationDelay: `${index * 40}ms` }}
-    >
-      <td className="rounded-l-xl p-4 sticky top-0 left-0 z-10 bg-card">
-        <div className="flex flex-col">
-          <h1 className="break-words text-sm font-bold tracking-tight">{server.name}</h1>
-          <span className="font-mono text-[10px] opacity-20">{server.address}</span>
+    <TableRow className="cursor-pointer" onClick={() => navigate(`/app/servers/${server.id}`)}>
+      {/* Server name + address */}
+      <TableCell>
+        <div className="flex items-center gap-3">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+            <ServerIcon size={16} />
+          </div>
+          <div>
+            <span className="text-sm font-semibold">{server.name || server.address}</span>
+            <div
+              className="cursor-copy font-mono text-xs text-muted-foreground hover:text-foreground"
+              onClick={(e) => {
+                e.stopPropagation();
+                copyToClipboard(server.address);
+                toast.success(t("Copied"), { description: server.address });
+              }}
+            >
+              {server.address}
+            </div>
+          </div>
         </div>
-      </td>
-      <td className="text-center p-2">
+      </TableCell>
+
+      {/* SSH */}
+      <TableCell className="text-center" onClick={(e) => e.stopPropagation()}>
         <ServerSSHStat
           server={server}
           sshConnected={sshConnected}
           setSSHConnected={setSSHConnected}
           registerSSHRefetch={registerSSHRefetch}
         />
-      </td>
-      <td className="text-center p-2">
+      </TableCell>
+
+      {/* Ports */}
+      <TableCell className="text-center">
         <ServerPortsStat
           usedPorts={server.portUsed}
           totalPorts={server.portTotal}
           sshConnected={sshConnected}
         />
-      </td>
-      <td className="text-center p-2">
+      </TableCell>
+
+      {/* Traffic */}
+      <TableCell className="text-center">
         <ServerTrafficStat
           uploadTotal={server.uploadTotal}
           downloadTotal={server.downloadTotal}
           sshConnected={sshConnected}
         />
-      </td>
-      <td className="text-center p-2">
-        <Badge
-          variant="outline"
-          className="cursor-pointer font-mono text-[10px] transition-transform hover:scale-105 active:scale-95"
-          onClick={() => handleCopy(server.address)}
-        >
-          {server.address}
-        </Badge>
-      </td>
+      </TableCell>
+
+      {/* CPU / Mem / Disk (3 cells rendered by ServerStat) */}
       <ServerStat
         serverId={server.id}
         sshConnected={sshConnected}
         metric={metric}
+        as={TableCell}
       />
-      <td className="sticky right-0 z-10 rounded-r-xl bg-card">
-        <div className="flex flex-col justify-center items-center space-y-2">
+
+      {/* Actions */}
+      <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-end gap-1">
           <Button
             variant="ghost"
             size="xs"
-            className="w-12 text-xs"
             onClick={handleEdit}
           >
             {t("Edit")}
           </Button>
           <Button
-            variant="default"
+            variant="secondary"
             size="xs"
-            className="w-12 text-xs"
             onClick={() => navigate(`/app/servers/${server.id}`)}
           >
-            {t("Check")}
+            {t("Open")}
+            <ArrowUpRight size={14} />
           </Button>
         </div>
-      </td>
-    </tr>
+      </TableCell>
+    </TableRow>
   );
 };
 

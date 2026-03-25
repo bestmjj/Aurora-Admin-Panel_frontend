@@ -56,7 +56,7 @@ const ServerStat = ({ serverId, sshConnected, metric, as: Cell = "td" }: ServerS
 
   return (
     <>
-      <Cell className="relative z-10 text-center p-2">
+      <Cell className="text-center">
         {error ? (
           <div className="w-full h-20 flex items-center justify-center">
             <Tooltip>
@@ -87,7 +87,7 @@ const ServerStat = ({ serverId, sshConnected, metric, as: Cell = "td" }: ServerS
           />
         )}
       </Cell>
-      <Cell className="relative z-10 text-center p-2">
+      <Cell className="text-center">
         {error ? (
           <div className="w-full h-20 flex items-center justify-center">
             <Tooltip>
@@ -118,7 +118,7 @@ const ServerStat = ({ serverId, sshConnected, metric, as: Cell = "td" }: ServerS
           />
         )}
       </Cell>
-      <Cell className="relative z-10 text-center p-2">
+      <Cell className="text-center">
         {error ? (
           <div className="w-full h-20 flex items-center justify-center">
             <Tooltip>

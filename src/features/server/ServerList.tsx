@@ -1,18 +1,15 @@
 import { useCallback, useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { motion } from "framer-motion";
-import ServerCard from "./ServerCard";
-import ServerRow from "./ServerRow";
-import { List, LayoutGrid } from "lucide-react";
 import { gql, useQuery, useApolloClient } from "@apollo/client";
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+  Table,
+  TableBody,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 import { GET_SERVERS_QUERY } from "../../queries/server";
 import Error from "../layout/Error";
@@ -22,6 +19,7 @@ import { useAtom } from "jotai";
 import serverLimitAtom from "../../atoms/server/limit";
 import { useModal } from "../../atoms/modal";
 import PageHeader from "../ui/PageHeader";
+import ServerRow from "./ServerRow";
 
 const SERVER_METRIC_SUBSCRIPTION = gql`
 subscription ServerMetric {
@@ -92,14 +90,17 @@ const ServerList = () => {
     GET_SERVERS_QUERY,
     { variables: { limit, offset } }
   );
-  const [listStyle, setListStyle] = useState("List view");
 
   const setLimit = useCallback((value: number) => {
     setAtomLimit(value);
     setQueryLimit(value);
   }, [setAtomLimit, setQueryLimit]);
 
+  const servers = data?.paginatedServers?.items ?? [];
+  const count = data?.paginatedServers?.count ?? 0;
+
   if (error) return <Error error={error} />;
+
   return (
     <>
       <PageHeader
@@ -108,101 +109,70 @@ const ServerList = () => {
           const result = await open("serverInfo");
           if (result) refetch();
         }}
-      >
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setListStyle(listStyle === "Cards view" ? "List view" : "Cards view")}
-            >
-              {listStyle === "Cards view" ? <List size={20} /> : <LayoutGrid size={20} />}
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent side="bottom">{t(listStyle)}</TooltipContent>
-        </Tooltip>
-      </PageHeader>
+      />
 
-      {listStyle === "Cards view" ? (
-        <>
-          <div className="grid grid-cols-1 gap-5 px-4 pb-6 pt-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-            {(data?.paginatedServers?.items ?? []).map((server: { id: number; [key: string]: unknown }, i: number) => (
-              <motion.div
-                key={server.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{
-                  delay: i * 0.05,
-                  duration: 0.4,
-                  ease: [0.22, 1, 0.36, 1],
-                }}
-              >
-                <ServerCard server={server as any} refetch={refetch} metric={metricsMap[server.id]} />
-              </motion.div>
+      <div className="overflow-hidden rounded-xl border border-border/50 bg-card">
+        {loading ? (
+          <div className="p-6 space-y-4">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <Skeleton key={i} className="h-16 w-full rounded-lg" />
             ))}
           </div>
-          <Paginator
-            isLoading={loading}
-            count={data?.paginatedServers?.count}
-            limit={limit}
-            offset={offset}
-            setLimit={setLimit}
-            setOffset={setOffset}
-          />
-        </>
-      ) : (
-        <>
-          <div className="overflow-x-auto">
-            <table className="w-full border-separate border-spacing-y-3 table-fixed max-w-screen-lg px-1 mx-auto text-sm">
-              <thead className="text-center">
-                <tr>
-                  <th className="w-32 sticky left-0 z-10 bg-background font-medium text-muted-foreground">
-                    {t("Name")}
-                  </th>
-                  <th className="w-16 font-medium text-muted-foreground">{t("SSH")}</th>
-                  <th className="w-16 font-medium text-muted-foreground">{t("Ports")}</th>
-                  <th className="w-16 font-medium text-muted-foreground">{t("Traffic")}</th>
-                  <th className="w-28 font-medium text-muted-foreground">{t("Address")}</th>
-                  <th className="w-12 font-medium text-muted-foreground">{t("CPU")}</th>
-                  <th className="w-12 font-medium text-muted-foreground">{t("Mem")}</th>
-                  <th className="w-16 font-medium text-muted-foreground">{t("Disk")}</th>
-                  <th className="w-16 sticky right-0 z-10 bg-background font-medium text-muted-foreground">{t("Actions")}</th>
-                </tr>
-              </thead>
-              <tbody className="text-center">
-                {loading ? (
-                  Array.from(Array(limit as number)).map((_, i) => (
-                    <tr key={i} className="w-full">
-                      <td colSpan={9}>
-                        <Skeleton className="h-20 w-full rounded-xl" />
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  (data?.paginatedServers?.items ?? []).map((server: { id: number; [key: string]: unknown }, i: number) => (
-                    <ServerRow
-                      key={server.id}
-                      server={server as any}
-                      refetch={refetch}
-                      metric={metricsMap[server.id]}
-                      index={i}
-                    />
-                  ))
-                )}
-              </tbody>
-            </table>
+        ) : servers.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-24">
+            <h2 className="text-lg font-bold tracking-tight">{t("No servers yet")}</h2>
+            <p className="mt-1.5 max-w-xs text-center text-sm text-muted-foreground">
+              {t("Add a server to get started.")}
+            </p>
+            <Button
+              variant="default"
+              size="sm"
+              className="mt-6"
+              onClick={async () => {
+                const result = await open("serverInfo");
+                if (result) refetch();
+              }}
+            >
+              {t("Add Server")}
+            </Button>
           </div>
-          <div className="flex w-full flex-row justify-end mx-auto max-w-screen-lg">
-            <Paginator
-              isLoading={loading}
-              count={data?.paginatedServers?.count}
-              limit={limit}
-              offset={offset}
-              setLimit={setLimit}
-              setOffset={setOffset}
-            />
-          </div>
-        </>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>{t("Name")}</TableHead>
+                <TableHead>{t("SSH")}</TableHead>
+                <TableHead>{t("Ports")}</TableHead>
+                <TableHead>{t("Traffic")}</TableHead>
+                <TableHead>{t("CPU")}</TableHead>
+                <TableHead>{t("Mem")}</TableHead>
+                <TableHead>{t("Disk")}</TableHead>
+                <TableHead className="text-right">{t("Actions")}</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {servers.map((server: { id: number; [key: string]: unknown }) => (
+                <ServerRow
+                  key={server.id}
+                  server={server as any}
+                  refetch={refetch}
+                  metric={metricsMap[server.id]}
+                />
+              ))}
+            </TableBody>
+          </Table>
+        )}
+      </div>
+
+      {servers.length > 0 && (
+        <Paginator
+          isLoading={loading}
+          count={count}
+          limit={limit}
+          offset={offset}
+          setLimit={setLimit}
+          setOffset={setOffset}
+        />
       )}
     </>
   );
