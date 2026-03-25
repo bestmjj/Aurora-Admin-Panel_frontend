@@ -141,12 +141,12 @@ const ServerList = () => {
             <TableHeader>
               <TableRow>
                 <TableHead>{t("Name")}</TableHead>
-                <TableHead>{t("SSH")}</TableHead>
-                <TableHead>{t("Ports")}</TableHead>
-                <TableHead>{t("Traffic")}</TableHead>
-                <TableHead>{t("CPU")}</TableHead>
-                <TableHead>{t("Mem")}</TableHead>
-                <TableHead>{t("Disk")}</TableHead>
+                <TableHead className="text-center">{t("SSH")}</TableHead>
+                <TableHead className="text-center">{t("Ports")}</TableHead>
+                <TableHead className="text-center">{t("Traffic")}</TableHead>
+                <TableHead className="text-center">{t("CPU")}</TableHead>
+                <TableHead className="text-center">{t("Mem")}</TableHead>
+                <TableHead className="text-center">{t("Disk")}</TableHead>
                 <TableHead className="text-right">{t("Actions")}</TableHead>
               </TableRow>
             </TableHeader>
