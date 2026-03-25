@@ -4,7 +4,6 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Rocket, Eye, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -105,16 +104,27 @@ const DeploymentList = () => {
       </PageHeader>
 
       <div className="mx-auto w-full max-w-screen-2xl px-4">
-        <Card>
-          <CardContent className="p-0">
-            {loading && !data ? (
-              <div className="p-6">
-                <DataLoading />
+        <div className="overflow-hidden rounded-xl border border-border/50 bg-card">
+          {loading && !data ? (
+            <div className="p-6">
+              <DataLoading />
+            </div>
+          ) : items.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-24">
+              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/8">
+                <Rocket size={28} className="text-primary/50" />
               </div>
-            ) : items.length === 0 ? (
-              <div className="p-6 text-sm text-muted-foreground">{t("No deployments yet")}</div>
-            ) : (
-              <Table>
+              <h2 className="mt-5 text-lg font-bold tracking-tight">{t("No deployments yet")}</h2>
+              <p className="mt-1.5 max-w-xs text-center text-sm text-muted-foreground">
+                {t("Create a deployment from a bound service to start running workloads on this server.")}
+              </p>
+              <Button variant="default" size="sm" className="mt-6" onClick={handleDeploy}>
+                <Rocket size={14} />
+                {t("Deploy")}
+              </Button>
+            </div>
+          ) : (
+            <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>ID</TableHead>
@@ -128,26 +138,33 @@ const DeploymentList = () => {
                 <TableBody>
                   {items.map((dep) => (
                     <TableRow key={dep.id}>
-                      <TableCell className="font-mono text-xs">{dep.id}</TableCell>
-                      <TableCell className="text-xs">
-                        {dep.serviceTitle || (dep.serviceBindingId ? `#${dep.serviceBindingId}` : "-")}
+                      <TableCell className="font-mono text-sm text-muted-foreground">#{dep.id}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                            <Rocket size={16} />
+                          </div>
+                          <span className="text-sm font-semibold">
+                            {dep.serviceTitle || (dep.serviceBindingId ? `Binding #${dep.serviceBindingId}` : "-")}
+                          </span>
+                        </div>
                       </TableCell>
                       <TableCell>
                         {dep.port ? (
-                          <Badge variant="outline" className="text-xs">
-                            {t("Port")} {dep.port.num}
+                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-muted text-muted-foreground border border-border">
+                            :{dep.port.num}
                             {dep.port.externalNum && dep.port.externalNum !== dep.port.num
-                              ? ` (${dep.port.externalNum})`
+                              ? ` → :${dep.port.externalNum}`
                               : ""}
-                          </Badge>
+                          </span>
                         ) : (
-                          <span className="text-xs text-muted-foreground">-</span>
+                          <span className="text-sm text-muted-foreground">-</span>
                         )}
                       </TableCell>
                       <TableCell>
                         <DeploymentStatusBadge status={dep.status} />
                       </TableCell>
-                      <TableCell className="text-xs">
+                      <TableCell className="text-sm text-muted-foreground">
                         {dep.updatedAt
                           ? new Date(dep.updatedAt).toLocaleString()
                           : "-"}
@@ -155,7 +172,7 @@ const DeploymentList = () => {
                       <TableCell className="text-right">
                         <Button
                           type="button"
-                          variant="ghost"
+                          variant="secondary"
                           size="xs"
                           onClick={async () => {
                             const result = await open("deploymentDetail", {
@@ -173,8 +190,7 @@ const DeploymentList = () => {
                 </TableBody>
               </Table>
             )}
-          </CardContent>
-        </Card>
+        </div>
         <Paginator
           isLoading={loading}
           count={data?.paginatedServerDeployments?.count}
