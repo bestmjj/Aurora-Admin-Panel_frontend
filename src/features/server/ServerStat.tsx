@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { cn } from "@/lib/utils";
 import { CircleAlert, CircleHelp } from "lucide-react";
 import { Chart } from "./chart/Chart";
 import useServerMetrics from "@/hooks/useServerMetrics";
@@ -25,9 +26,10 @@ interface ServerStatProps {
   sshConnected: boolean | null;
   metric?: ServerMetricSnapshot | null;
   as?: React.ElementType;
+  cellClassName?: string;
 }
 
-const ServerStat = ({ serverId, sshConnected, metric, as: Cell = "td" }: ServerStatProps) => {
+const ServerStat = ({ serverId, sshConnected, metric, as: Cell = "td", cellClassName }: ServerStatProps) => {
   const { t } = useTranslation();
   const { cpuSeries, memSeries, rxSeries, txSeries, loading, error } = useServerMetrics(serverId, metric);
 
@@ -56,9 +58,9 @@ const ServerStat = ({ serverId, sshConnected, metric, as: Cell = "td" }: ServerS
 
   return (
     <>
-      <Cell className="text-center">
+      <Cell className={cn("text-center", cellClassName)}>
         {error ? (
-          <div className="w-full h-20 flex items-center justify-center">
+          <div className="w-full h-16 flex items-center justify-center">
             <Tooltip>
               <TooltipTrigger asChild>
                 <span><CircleAlert className="text-destructive" size={20} /></span>
@@ -67,9 +69,9 @@ const ServerStat = ({ serverId, sshConnected, metric, as: Cell = "td" }: ServerS
             </Tooltip>
           </div>
         ) : loading ? (
-          <Skeleton className="w-full h-20 rounded-xl" />
+          <Skeleton className="w-full h-16 rounded-lg" />
         ) : isEmptyCPU ? (
-          <div className="w-full h-20 flex items-center justify-center">
+          <div className="w-full h-16 flex items-center justify-center">
             <Tooltip>
               <TooltipTrigger asChild>
                 <span><CircleHelp className="text-muted-foreground" size={18} /></span>
@@ -87,9 +89,9 @@ const ServerStat = ({ serverId, sshConnected, metric, as: Cell = "td" }: ServerS
           />
         )}
       </Cell>
-      <Cell className="text-center">
+      <Cell className={cn("text-center", cellClassName)}>
         {error ? (
-          <div className="w-full h-20 flex items-center justify-center">
+          <div className="w-full h-16 flex items-center justify-center">
             <Tooltip>
               <TooltipTrigger asChild>
                 <span><CircleAlert className="text-destructive" size={20} /></span>
@@ -98,9 +100,9 @@ const ServerStat = ({ serverId, sshConnected, metric, as: Cell = "td" }: ServerS
             </Tooltip>
           </div>
         ) : loading ? (
-          <Skeleton className="w-full h-20 rounded-xl" />
+          <Skeleton className="w-full h-16 rounded-lg" />
         ) : isEmptyMEM ? (
-          <div className="w-full h-20 flex items-center justify-center">
+          <div className="w-full h-16 flex items-center justify-center">
             <Tooltip>
               <TooltipTrigger asChild>
                 <span><CircleHelp className="text-muted-foreground" size={18} /></span>
@@ -118,9 +120,9 @@ const ServerStat = ({ serverId, sshConnected, metric, as: Cell = "td" }: ServerS
           />
         )}
       </Cell>
-      <Cell className="text-center">
+      <Cell className={cn("text-center", cellClassName)}>
         {error ? (
-          <div className="w-full h-20 flex items-center justify-center">
+          <div className="w-full h-16 flex items-center justify-center">
             <Tooltip>
               <TooltipTrigger asChild>
                 <span><CircleAlert className="text-destructive" size={20} /></span>
@@ -129,9 +131,9 @@ const ServerStat = ({ serverId, sshConnected, metric, as: Cell = "td" }: ServerS
             </Tooltip>
           </div>
         ) : loading ? (
-          <Skeleton className="w-full h-20 rounded-xl" />
+          <Skeleton className="w-full h-16 rounded-lg" />
         ) : isEmptyNET ? (
-          <div className="w-full h-20 flex items-center justify-center">
+          <div className="w-full h-16 flex items-center justify-center">
             <Tooltip>
               <TooltipTrigger asChild>
                 <span><CircleHelp className="text-muted-foreground" size={18} /></span>

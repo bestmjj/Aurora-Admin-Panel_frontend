@@ -45,7 +45,7 @@ const ServerRow = ({ server, refetch, metric }: ServerRowProps) => {
   return (
     <TableRow className="cursor-pointer" onClick={() => navigate(`/app/servers/${server.id}`)}>
       {/* Server name + address */}
-      <TableCell>
+      <TableCell className="py-3">
         <div className="flex items-center gap-3">
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
             <ServerIcon size={16} />
@@ -67,7 +67,7 @@ const ServerRow = ({ server, refetch, metric }: ServerRowProps) => {
       </TableCell>
 
       {/* SSH */}
-      <TableCell className="text-center" onClick={(e) => e.stopPropagation()}>
+      <TableCell className="py-3 text-center" onClick={(e) => e.stopPropagation()}>
         <ServerSSHStat
           server={server}
           sshConnected={sshConnected}
@@ -77,7 +77,7 @@ const ServerRow = ({ server, refetch, metric }: ServerRowProps) => {
       </TableCell>
 
       {/* Ports */}
-      <TableCell className="text-center">
+      <TableCell className="py-3 text-center">
         <ServerPortsStat
           usedPorts={server.portUsed}
           totalPorts={server.portTotal}
@@ -86,7 +86,7 @@ const ServerRow = ({ server, refetch, metric }: ServerRowProps) => {
       </TableCell>
 
       {/* Traffic */}
-      <TableCell className="text-center">
+      <TableCell className="py-3 text-center">
         <ServerTrafficStat
           uploadTotal={server.uploadTotal}
           downloadTotal={server.downloadTotal}
@@ -100,10 +100,11 @@ const ServerRow = ({ server, refetch, metric }: ServerRowProps) => {
         sshConnected={sshConnected}
         metric={metric}
         as={TableCell}
+        cellClassName="py-3"
       />
 
       {/* Actions */}
-      <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+      <TableCell className="py-3 text-right" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-end gap-1">
           <Button
             variant="ghost"

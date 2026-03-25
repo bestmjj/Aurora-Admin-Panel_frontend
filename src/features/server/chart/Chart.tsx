@@ -40,7 +40,7 @@ export const Chart = ({
   const fmt = fmtOverride || (unit === "%" ? formatPct : formatBps);
   return (
     <div className={cn("w-full h-full bg-card/80 backdrop-blur supports-[backdrop-filter]:bg-card/60", className)}>
-      <div className="w-full h-20">
+      <div className="w-full h-16">
         <Sparkline
           data={data}
           data2={data2}
